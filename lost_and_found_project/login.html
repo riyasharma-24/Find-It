@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FindIt — Login / Sign Up</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --blue-dark:#0B2F6B;--blue-mid:#1A56B0;--aqua:#00C2CB;--aqua-light:#7EEAED;
+      --aqua-pale:#E0FAFB;--green:#22C55E;--green-light:#BBF7D0;--green-dark:#15803D;
+      --yellow:#FACC15;--white:#FFFFFF;--off-white:#F4FBFC;--light-gray:#EAF4F5;
+      --text-dark:#0B2F6B;--text-body:#334155;--text-muted:#64748B;--text-light:#94A3B8;
+      --border:#CBE8EA;--shadow-sm:0 2px 8px rgba(11,47,107,0.08);
+      --shadow-md:0 8px 24px rgba(11,47,107,0.14);--radius-md:14px;--radius-lg:22px;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{font-family:'Nunito',sans-serif;background:var(--aqua-pale);color:var(--text-body);min-height:100vh;overflow-x:hidden;}
+    ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--aqua-pale);}::-webkit-scrollbar-thumb{background:var(--aqua);border-radius:99px;}
+    .auth-page{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;}
+    .auth-left{background:linear-gradient(155deg,var(--blue-dark) 0%,#1A56B0 55%,#0891b2 100%);display:flex;flex-direction:column;justify-content:center;padding:60px 56px;position:relative;overflow:hidden;}
+    .auth-left::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/svg%3E");}
+    .blob{position:absolute;border-radius:50%;pointer-events:none;}
+    .blob1{width:420px;height:420px;background:radial-gradient(circle,rgba(0,194,203,0.22),transparent 70%);bottom:-140px;right:-140px;}
+    .blob2{width:250px;height:250px;background:radial-gradient(circle,rgba(250,204,21,0.12),transparent 70%);top:-80px;left:30%;}
+    .auth-left-inner{position:relative;z-index:2;}
+    .brand{font-family:'Poppins',sans-serif;font-weight:800;font-size:2.2rem;color:white;margin-bottom:44px;display:flex;align-items:center;gap:10px;text-decoration:none;}
+    .brand-accent{color:var(--aqua-light);}
+    .brand-dot{width:10px;height:10px;border-radius:50%;background:var(--yellow);flex-shrink:0;}
+    .auth-left h2{font-family:'Poppins',sans-serif;font-size:1.85rem;font-weight:700;color:white;line-height:1.3;margin-bottom:14px;}
+    .auth-left .left-desc{color:rgba(255,255,255,0.65);font-size:0.97rem;line-height:1.75;margin-bottom:40px;}
+    .features{display:flex;flex-direction:column;gap:14px;}
+    .feat{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.13);border-radius:14px;padding:14px 18px;transition:background 0.2s;}
+    .feat:hover{background:rgba(255,255,255,0.12);}
+    .feat-ic{width:42px;height:42px;border-radius:11px;background:rgba(0,194,203,0.22);display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;}
+    .feat-tx strong{display:block;color:white;font-size:0.88rem;font-weight:700;}
+    .feat-tx small{color:rgba(255,255,255,0.52);font-size:0.77rem;}
+    .auth-right{background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 56px;overflow-y:auto;}
+    .auth-box{width:100%;max-width:430px;}
+    .back-link{display:inline-flex;align-items:center;gap:6px;color:var(--text-muted);font-size:0.84rem;font-weight:600;text-decoration:none;margin-bottom:32px;transition:color 0.2s;}
+    .back-link:hover{color:var(--blue-mid);}
+    .auth-tabs{display:flex;background:var(--light-gray);border-radius:14px;padding:5px;gap:5px;margin-bottom:30px;}
+    .auth-tab{flex:1;padding:11px 8px;text-align:center;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.9rem;color:var(--text-muted);transition:all 0.25s;user-select:none;}
+    .auth-tab.active{background:white;color:var(--blue-dark);box-shadow:var(--shadow-sm);}
+    .auth-title{font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:800;color:var(--text-dark);margin-bottom:5px;}
+    .auth-sub{font-size:0.9rem;color:var(--text-muted);margin-bottom:26px;}
+    .alert{display:none;align-items:center;gap:10px;padding:12px 16px;border-radius:11px;font-size:0.87rem;font-weight:600;margin-bottom:16px;animation:fadeSlide 0.3s ease;}
+    .alert.show{display:flex;}
+    .alert-error{background:#FEF2F2;color:#DC2626;border:1.5px solid #FECACA;}
+    .alert-success{background:var(--green-light);color:var(--green-dark);border:1.5px solid #86EFAC;}
+    @keyframes fadeSlide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+    .form-group{margin-bottom:18px;}
+    .form-label{display:block;font-weight:700;font-size:0.86rem;color:var(--text-dark);margin-bottom:7px;}
+    .label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+    .label-row .form-label{margin-bottom:0;}
+    .forgot-link{font-size:0.8rem;color:var(--blue-mid);font-weight:700;cursor:pointer;text-decoration:none;}
+    .forgot-link:hover{text-decoration:underline;}
+    .input-wrap{position:relative;}
+    .input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:1rem;pointer-events:none;line-height:1;}
+    .form-control{width:100%;background:var(--off-white);border:2px solid var(--border);border-radius:var(--radius-md);padding:12px 16px 12px 42px;font-size:0.94rem;font-family:'Nunito',sans-serif;color:var(--text-body);outline:none;transition:border-color 0.2s,box-shadow 0.2s,background 0.2s;}
+    .form-control.no-icon{padding-left:16px;}
+    .form-control:focus{border-color:var(--aqua);box-shadow:0 0 0 4px rgba(0,194,203,0.13);background:white;}
+    .form-control::placeholder{color:var(--text-light);}
+    .form-control.error{border-color:#EF4444;box-shadow:0 0 0 4px rgba(239,68,68,0.10);}
+    .field-err{font-size:0.76rem;color:#DC2626;font-weight:700;margin-top:5px;display:none;}
+    .field-err.show{display:block;}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .pass-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:1rem;opacity:0.55;transition:opacity 0.2s;user-select:none;}
+    .pass-toggle:hover{opacity:1;}
+    .check-row{display:flex;align-items:flex-start;gap:10px;font-size:0.84rem;color:var(--text-muted);cursor:pointer;line-height:1.5;margin-bottom:18px;}
+    .check-row input[type="checkbox"]{accent-color:var(--aqua);width:16px;height:16px;flex-shrink:0;margin-top:2px;cursor:pointer;}
+    .check-row a{color:var(--blue-mid);font-weight:700;}
+    .auth-btn{width:100%;background:linear-gradient(135deg,var(--aqua),var(--blue-mid));color:white;border:none;border-radius:var(--radius-md);padding:14px;font-family:'Poppins',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform 0.22s,box-shadow 0.22s,opacity 0.2s;box-shadow:0 6px 18px rgba(0,194,203,0.3);}
+    .auth-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,194,203,0.42);}
+    .auth-btn:active:not(:disabled){transform:translateY(0);}
+    .auth-btn:disabled{opacity:0.6;cursor:not-allowed;}
+    .spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,0.35);border-top-color:white;border-radius:50%;animation:spin 0.65s linear infinite;flex-shrink:0;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .divider{text-align:center;color:var(--text-light);font-size:0.83rem;margin:18px 0;position:relative;}
+    .divider::before,.divider::after{content:'';position:absolute;top:50%;width:36%;height:1px;background:var(--border);}
+    .divider::before{left:0;}.divider::after{right:0;}
+    .google-btn{width:100%;background:white;border:2px solid var(--border);border-radius:var(--radius-md);padding:12px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;color:var(--text-dark);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s;}
+    .google-btn:hover{border-color:var(--aqua);transform:translateY(-1px);box-shadow:var(--shadow-sm);}
+    .auth-footer{text-align:center;margin-top:22px;font-size:0.84rem;color:var(--text-muted);}
+    .auth-footer a{color:var(--blue-mid);font-weight:700;cursor:pointer;}
+    .auth-footer a:hover{text-decoration:underline;}
+    .strength-bar{height:4px;border-radius:99px;background:var(--border);margin-top:8px;overflow:hidden;}
+    .strength-fill{height:100%;border-radius:99px;width:0;transition:width 0.4s,background 0.4s;}
+    @media(max-width:900px){.auth-page{grid-template-columns:1fr;}.auth-left{display:none;}.auth-right{padding:40px 24px;}}
+    @media(max-width:400px){.two-col{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="auth-page">
+
+  <!-- LEFT PANEL -->
+  <div class="auth-left">
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+    <div class="auth-left-inner">
+      <a class="brand" href="index.html">Find<span class="brand-accent">It</span><span class="brand-dot"></span></a>
+      <h2>Join thousands recovering their lost belongings</h2>
+      <p class="left-desc">Our community-powered platform makes it easy and safe to report, find, and recover items — completely free.</p>
+      <div class="features">
+        <div class="feat"><div class="feat-ic">🔍</div><div class="feat-tx"><strong>Smart Item Matching</strong><small>AI-powered auto-match between lost &amp; found reports</small></div></div>
+        <div class="feat"><div class="feat-ic">💬</div><div class="feat-tx"><strong>Private Secure Chat</strong><small>Talk directly without revealing personal numbers</small></div></div>
+        <div class="feat"><div class="feat-ic">📍</div><div class="feat-tx"><strong>Location Pinning</strong><small>Pin exact spots on the map for faster recovery</small></div></div>
+        <div class="feat"><div class="feat-ic">⭐</div><div class="feat-tx"><strong>Trusted Community</strong><small>Verified users with public ratings &amp; badges</small></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="auth-right">
+    <div class="auth-box">
+      <a class="back-link" href="index.html">← Back to Home</a>
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tabLogin"  onclick="switchTab('login')">Sign In</div>
+        <div class="auth-tab"        id="tabSignup" onclick="switchTab('signup')">Create Account</div>
+      </div>
+
+      <!-- LOGIN PANEL -->
+      <div id="loginPanel">
+        <div class="auth-title">Welcome back! 👋</div>
+        <div class="auth-sub">Sign in to continue to FindIt</div>
+
+        <div class="alert alert-error" id="loginAlert">
+          <span>⚠️</span><span id="loginAlertMsg">Invalid email or password.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="loginEmail">Email Address</label>
+          <div class="input-wrap">
+            <span class="input-icon">📧</span>
+            <input class="form-control" id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email" oninput="clearFE(this,'loginEmailErr')"/>
+          </div>
+          <div class="field-err" id="loginEmailErr">Please enter a valid email address.</div>
+        </div>
+
+        <div class="form-group">
+          <div class="label-row">
+            <label class="form-label" for="loginPass">Password</label>
+            <a class="forgot-link" onclick="showForgot()">Forgot password?</a>
+          </div>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input class="form-control" id="loginPass" type="password" placeholder="Enter your password" autocomplete="current-password" oninput="clearFE(this,'loginPassErr')"/>
+            <span class="pass-toggle" onclick="togglePass('loginPass',this)">👁️</span>
+          </div>
+          <div class="field-err" id="loginPassErr">Password is required.</div>
+        </div>
+
+        <label class="check-row" style="margin-bottom:20px;">
+          <input type="checkbox" id="rememberMe"/> Remember me for 30 days
+        </label>
+
+        <button class="auth-btn" id="loginBtn" onclick="doLogin()">Sign In →</button>
+
+        <div class="divider">or continue with</div>
+        <button class="google-btn" onclick="googleNotice()">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.1 33.6 29.6 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l6-6C34.2 6.1 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.2-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15 16.1 19.1 13 24 13c3 0 5.7 1.1 7.8 2.9l6-6C34.2 6.1 29.4 4 24 4 16.1 4 9.4 8.4 6.3 14.7z"/><path fill="#FBBC05" d="M24 44c5.4 0 10.2-1.9 13.9-5l-6.5-5.3C29.4 35.3 26.8 36 24 36c-5.6 0-10.3-3.7-11.9-8.9l-6.9 5.3C8.9 39.3 16 44 24 44z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.7c-.9 2.6-2.6 4.7-4.9 6.2l6.5 5.3c3.8-3.5 6.2-8.7 6.2-14.9 0-1.3-.1-2.7-.2-4z"/></svg>
+          Continue with Google
+        </button>
+      </div>
+
+      <!-- SIGNUP PANEL -->
+      <div id="signupPanel" style="display:none;">
+        <div class="auth-title">Join FindIt! 🎉</div>
+        <div class="auth-sub">Create your free account in seconds</div>
+
+        <div class="alert alert-error"   id="signupAlert"><span>⚠️</span><span id="signupAlertMsg">Something went wrong.</span></div>
+        <div class="alert alert-success" id="signupSuccess"><span>✅</span><span>Account created! Taking you to dashboard…</span></div>
+
+        <div class="two-col" style="margin-bottom:18px;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" for="signupFirst">First Name</label>
+            <input class="form-control no-icon" id="signupFirst" type="text" placeholder="Arjun" autocomplete="given-name" oninput="clearFE(this,'firstErr')"/>
+            <div class="field-err" id="firstErr">Required.</div>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" for="signupLast">Last Name</label>
+            <input class="form-control no-icon" id="signupLast" type="text" placeholder="Sharma" autocomplete="family-name" oninput="clearFE(this,'lastErr')"/>
+            <div class="field-err" id="lastErr">Required.</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signupEmail">Email Address</label>
+          <div class="input-wrap">
+            <span class="input-icon">📧</span>
+            <input class="form-control" id="signupEmail" type="email" placeholder="you@example.com" autocomplete="email" oninput="clearFE(this,'emailErr')"/>
+          </div>
+          <div class="field-err" id="emailErr">Please enter a valid email address.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signupPhone">Phone Number <span style="color:var(--text-light);font-weight:500;">(optional)</span></label>
+          <div class="input-wrap">
+            <span class="input-icon">📱</span>
+            <input class="form-control" id="signupPhone" type="tel" placeholder="+91 98765 43210" autocomplete="tel"/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signupPass">Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input class="form-control" id="signupPass" type="password" placeholder="Minimum 8 characters" autocomplete="new-password" oninput="checkStrength(this.value);clearFE(this,'passErr')"/>
+            <span class="pass-toggle" onclick="togglePass('signupPass',this)">👁️</span>
+          </div>
+          <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+          <div class="field-err" id="passErr">Password must be at least 8 characters.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signupConfirm">Confirm Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input class="form-control" id="signupConfirm" type="password" placeholder="Re-enter your password" autocomplete="new-password" oninput="clearFE(this,'confirmErr')"/>
+          </div>
+          <div class="field-err" id="confirmErr">Passwords do not match.</div>
+        </div>
+
+        <label class="check-row">
+          <input type="checkbox" id="agreeTerms"/>
+          I agree to FindIt's <a href="#" onclick="return false;">Terms of Service</a> and <a href="#" onclick="return false;">Privacy Policy</a>
+        </label>
+        <div class="field-err" id="termsErr" style="margin-top:-12px;margin-bottom:14px;">You must agree to the terms to continue.</div>
+
+        <button class="auth-btn" id="signupBtn" onclick="doSignup()">Create My Account →</button>
+
+        <div class="divider">or sign up with</div>
+        <button class="google-btn" onclick="googleNotice()">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.1 33.6 29.6 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l6-6C34.2 6.1 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.2-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15 16.1 19.1 13 24 13c3 0 5.7 1.1 7.8 2.9l6-6C34.2 6.1 29.4 4 24 4 16.1 4 9.4 8.4 6.3 14.7z"/><path fill="#FBBC05" d="M24 44c5.4 0 10.2-1.9 13.9-5l-6.5-5.3C29.4 35.3 26.8 36 24 36c-5.6 0-10.3-3.7-11.9-8.9l-6.9 5.3C8.9 39.3 16 44 24 44z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.7c-.9 2.6-2.6 4.7-4.9 6.2l6.5 5.3c3.8-3.5 6.2-8.7 6.2-14.9 0-1.3-.1-2.7-.2-4z"/></svg>
+          Continue with Google
+        </button>
+      </div>
+
+      <div class="auth-footer" id="authFooter">
+        Don't have an account? <a onclick="switchTab('signup')">Sign up free →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════ AUTH (localStorage) ════════ */
+const AUTH = {
+  TOKEN_KEY:'findit_token', USER_KEY:'findit_user',
+  save(t,u){localStorage.setItem(this.TOKEN_KEY,t);localStorage.setItem(this.USER_KEY,JSON.stringify(u));},
+  getToken(){return localStorage.getItem(this.TOKEN_KEY);},
+  getUser(){try{return JSON.parse(localStorage.getItem(this.USER_KEY));}catch{return null;}},
+  isLoggedIn(){return !!this.getToken();},
+  clear(){localStorage.removeItem(this.TOKEN_KEY);localStorage.removeItem(this.USER_KEY);}
+};
+
+/* Already logged in → go to dashboard */
+if(AUTH.isLoggedIn()) window.location.replace('dashboard.html');
+
+/* If user clicked "Sign Up Free" from home, open signup tab directly */
+if(sessionStorage.getItem('findit_tab')==='signup'){
+  sessionStorage.removeItem('findit_tab');
+  switchTab('signup');
+}
+
+const API_BASE='http://localhost:5000/api';
+
+/* ════════ TAB SWITCHER ════════ */
+function switchTab(tab){
+  const isL=tab==='login';
+  document.getElementById('tabLogin').classList.toggle('active',isL);
+  document.getElementById('tabSignup').classList.toggle('active',!isL);
+  document.getElementById('loginPanel').style.display=isL?'block':'none';
+  document.getElementById('signupPanel').style.display=!isL?'block':'none';
+  document.getElementById('authFooter').innerHTML=isL
+    ?`Don't have an account? <a onclick="switchTab('signup')">Sign up free →</a>`
+    :`Already have an account? <a onclick="switchTab('login')">Sign in →</a>`;
+  hideAlert('loginAlert');hideAlert('signupAlert');hideAlert('signupSuccess');
+}
+
+/* ════════ UTILITIES ════════ */
+function showAlert(id,msg){
+  const el=document.getElementById(id);
+  const sp=el.querySelector('span:last-child');
+  if(sp&&msg)sp.textContent=msg;
+  el.classList.add('show');
+}
+function hideAlert(id){document.getElementById(id).classList.remove('show');}
+
+function showFE(inputId,errId,msg){
+  const i=document.getElementById(inputId);
+  const e=document.getElementById(errId);
+  if(i)i.classList.add('error');
+  if(e){e.textContent=msg;e.classList.add('show');}
+}
+function clearFE(el,errId){
+  el.classList.remove('error');
+  const e=document.getElementById(errId);
+  if(e)e.classList.remove('show');
+}
+
+function setLoading(btnId,loading,txt){
+  const b=document.getElementById(btnId);
+  b.disabled=loading;
+  b.innerHTML=loading?'<div class="spinner"></div>':txt;
+}
+
+function isEmail(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);}
+function fakeToken(){return 'demo_'+Math.random().toString(36).slice(2)+Date.now();}
+
+function togglePass(id,el){
+  const i=document.getElementById(id);
+  i.type=i.type==='password'?'text':'password';
+  el.textContent=i.type==='password'?'👁️':'🙈';
+}
+
+function checkStrength(v){
+  const f=document.getElementById('strengthFill');
+  let s=0;
+  if(v.length>=8)s++;if(v.length>=12)s++;
+  if(/[A-Z]/.test(v))s++;if(/[0-9]/.test(v))s++;if(/[^A-Za-z0-9]/.test(v))s++;
+  f.style.width=(s/5*100)+'%';
+  f.style.background=s<=1?'#EF4444':s<=3?'#F59E0B':'#22C55E';
+}
+
+function showForgot(){alert('🔑 Password Reset\n\nWhen backend is connected, a reset email will be sent.\nFor now, create a new account or use your saved credentials.');}
+function googleNotice(){alert('🔵 Google Sign-In needs the backend server running.\nSetup: see README.md\n\nPlease use email & password for now.');}
+
+function redirectAfterLogin(){
+  const dest=sessionStorage.getItem('findit_redirect');
+  sessionStorage.removeItem('findit_redirect');
+  window.location.replace((dest&&!dest.includes('login.html'))?dest:'dashboard.html');
+}
+
+/* ════════ LOGIN ════════ */
+async function doLogin(){
+  hideAlert('loginAlert');
+  let ok=true;
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+
+  if(!email||!isEmail(email)){showFE('loginEmail','loginEmailErr','Please enter a valid email address.');ok=false;}
+  if(!pass){showFE('loginPass','loginPassErr','Password is required.');ok=false;}
+  if(!ok)return;
+
+  setLoading('loginBtn',true,'Sign In →');
+
+  /* Try real backend */
+  try{
+    const r=await fetch(`${API_BASE}/auth/login`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,password:pass}),
+      signal:AbortSignal.timeout(5000)
+    });
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.message||'Login failed.');
+    AUTH.save(d.token,d.user);
+    redirectAfterLogin();return;
+  }catch(err){
+    /* Backend offline → check demo accounts in localStorage */
+    const accounts=JSON.parse(localStorage.getItem('findit_accounts')||'[]');
+    const match=accounts.find(a=>a.email===email.toLowerCase()&&a.password===pass);
+    if(match){
+      const{password:_p,...safe}=match;
+      AUTH.save(fakeToken(),safe);
+      redirectAfterLogin();return;
+    }
+    const msg=(err.name==='TimeoutError'||err.message.includes('fetch'))
+      ?'Backend server is offline. Use the same email & password you signed up with on this device.'
+      :(err.message||'Invalid email or password.');
+    showAlert('loginAlert',msg);
+    setLoading('loginBtn',false,'Sign In →');
+  }
+}
+
+/* ════════ SIGNUP ════════ */
+async function doSignup(){
+  hideAlert('signupAlert');hideAlert('signupSuccess');
+  let ok=true;
+  const first=document.getElementById('signupFirst').value.trim();
+  const last=document.getElementById('signupLast').value.trim();
+  const email=document.getElementById('signupEmail').value.trim();
+  const phone=document.getElementById('signupPhone').value.trim();
+  const pass=document.getElementById('signupPass').value;
+  const confirm=document.getElementById('signupConfirm').value;
+  const agreed=document.getElementById('agreeTerms').checked;
+
+  if(!first){showFE('signupFirst','firstErr','First name is required.');ok=false;}
+  if(!last){showFE('signupLast','lastErr','Last name is required.');ok=false;}
+  if(!email||!isEmail(email)){showFE('signupEmail','emailErr','Please enter a valid email address.');ok=false;}
+  if(pass.length<8){showFE('signupPass','passErr','Password must be at least 8 characters.');ok=false;}
+  if(pass!==confirm){showFE('signupConfirm','confirmErr','Passwords do not match.');ok=false;}
+  if(!agreed){document.getElementById('termsErr').classList.add('show');ok=false;}
+  else{document.getElementById('termsErr').classList.remove('show');}
+  if(!ok)return;
+
+  setLoading('signupBtn',true,'Create My Account →');
+
+  /* Try real backend */
+  try{
+    const r=await fetch(`${API_BASE}/auth/register`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({firstName:first,lastName:last,email,phone,password:pass}),
+      signal:AbortSignal.timeout(5000)
+    });
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.message||'Registration failed.');
+    AUTH.save(d.token,d.user);
+    showAlert('signupSuccess','');
+    setTimeout(redirectAfterLogin,1200);return;
+  }catch(err){
+    const isNet=err.name==='TimeoutError'||err.message.includes('fetch');
+    if(isNet){
+      /* Save locally for demo mode */
+      const accounts=JSON.parse(localStorage.getItem('findit_accounts')||'[]');
+      if(accounts.find(a=>a.email===email.toLowerCase())){
+        showAlert('signupAlert','An account with this email already exists. Please sign in.');
+        setLoading('signupBtn',false,'Create My Account →');return;
+      }
+      const newUser={
+        _id:'local_'+Date.now(),firstName:first,lastName:last,
+        email:email.toLowerCase(),phone,password:pass,
+        rating:5.0,badges:['Early Adopter'],
+        stats:{reported:0,found:0,reunited:0},
+        createdAt:new Date().toISOString()
+      };
+      accounts.push(newUser);
+      localStorage.setItem('findit_accounts',JSON.stringify(accounts));
+      const{password:_p,...safe}=newUser;
+      AUTH.save(fakeToken(),safe);
+      showAlert('signupSuccess','');
+      setTimeout(redirectAfterLogin,1200);return;
+    }
+    showAlert('signupAlert',err.message||'Registration failed. Please try again.');
+    setLoading('signupBtn',false,'Create My Account →');
+  }
+}
+
+/* Enter key support */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  const loginVis=document.getElementById('loginPanel').style.display!=='none';
+  if(loginVis)doLogin();else doSignup();
+});
+</script>
+</body>
+</html>

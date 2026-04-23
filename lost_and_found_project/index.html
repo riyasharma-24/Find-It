@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FindIt — Lost & Found Platform</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    /* ═══ HERO ═══ */
+    .hero {
+      background: linear-gradient(135deg, #0B2F6B 0%, #1A56B0 55%, #0891b2 100%);
+      min-height: 94vh;
+      display: flex; align-items: center;
+      position: relative; overflow: hidden;
+      padding: 80px 60px;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-blob1 {
+      position: absolute; width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,194,203,0.25), transparent 70%);
+      top: -100px; right: -100px; pointer-events: none;
+    }
+    .hero-blob2 {
+      position: absolute; width: 350px; height: 350px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(250,204,21,0.15), transparent 70%);
+      bottom: -80px; left: 30%; pointer-events: none;
+    }
+    .hero-content {
+      position: relative; z-index: 2; max-width: 600px;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(0,194,203,0.2); border: 1px solid rgba(0,194,203,0.4);
+      color: var(--aqua-light); padding: 8px 18px; border-radius: 99px;
+      font-size: 0.82rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; margin-bottom: 28px;
+      animation: fadeUp 0.5s ease both;
+    }
+    .hero-badge::before { content:'●'; animation: blink 1.4s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .hero h1 {
+      font-size: clamp(2.6rem, 5.5vw, 4.2rem);
+      font-weight: 800; color: white; line-height: 1.1;
+      margin-bottom: 22px;
+      animation: fadeUp 0.5s 0.1s ease both;
+    }
+    .hero h1 .highlight {
+      background: linear-gradient(90deg, var(--aqua-light), var(--yellow));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.1rem; color: rgba(255,255,255,0.75);
+      line-height: 1.75; margin-bottom: 36px;
+      animation: fadeUp 0.5s 0.2s ease both;
+    }
+    .hero-btns {
+      display: flex; gap: 14px; flex-wrap: wrap;
+      animation: fadeUp 0.5s 0.3s ease both;
+    }
+    .hero-visual {
+      position: absolute; right: 60px; top: 50%; transform: translateY(-50%);
+      z-index: 2; display: flex; flex-direction: column; gap: 16px;
+    }
+    .hero-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 18px; padding: 18px 22px;
+      display: flex; align-items: center; gap: 14px;
+      color: white; min-width: 260px;
+      animation: float 4s ease-in-out infinite;
+    }
+    .hero-card:nth-child(2) { animation-delay: 1.5s; margin-left: 30px; }
+    .hero-card:nth-child(3) { animation-delay: 0.8s; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+    .hero-card-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .hci-red { background: rgba(220,38,38,0.25); }
+    .hci-green { background: rgba(34,197,94,0.25); }
+    .hci-yellow { background: rgba(250,204,21,0.25); }
+    .hero-card strong { display: block; font-size: 0.9rem; font-weight: 700; }
+    .hero-card small { font-size: 0.75rem; opacity: 0.7; }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ═══ STATS BAR ═══ */
+    .stats-bar {
+      background: white;
+      box-shadow: var(--shadow-md);
+      border-radius: var(--radius-lg);
+      margin: -40px 60px 0;
+      position: relative; z-index: 10;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      overflow: hidden;
+    }
+    .stat-item {
+      padding: 28px 32px; text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.2rem; font-weight: 800; color: var(--blue-dark);
+      line-height: 1;
+    }
+    .stat-num span { color: var(--aqua); }
+    .stat-label { font-size: 0.85rem; color: var(--text-muted); margin-top: 6px; font-weight: 600; }
+
+    /* ═══ FEATURES ═══ */
+    .features-section { padding: 100px 60px; }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 24px; margin-top: 56px;
+    }
+    .feature-card {
+      padding: 32px; border-radius: var(--radius-lg);
+      background: white; border: 2px solid var(--border);
+      transition: all 0.3s;
+    }
+    .feature-card:hover { border-color: var(--aqua); transform: translateY(-6px); box-shadow: var(--shadow-md); }
+    .feature-icon {
+      width: 56px; height: 56px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 20px;
+    }
+    .fi-aqua { background: var(--aqua-pale); }
+    .fi-green { background: var(--green-light); }
+    .fi-yellow { background: var(--yellow-light); }
+    .feature-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
+    .feature-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.65; }
+
+    /* ═══ HOW IT WORKS ═══ */
+    .how-section {
+      background: linear-gradient(135deg, var(--blue-dark), #1A56B0);
+      padding: 100px 60px; text-align: center; position: relative; overflow: hidden;
+    }
+    .how-section::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Crect x='0' y='0' width='20' height='20'/%3E%3Crect x='20' y='20' width='20' height='20'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .how-section .section-title { color: white; }
+    .how-section .section-subtitle { color: rgba(255,255,255,0.65); margin: 0 auto; }
+    .steps-row {
+      display: flex; justify-content: center; align-items: flex-start;
+      gap: 0; margin-top: 64px; position: relative; z-index: 1; flex-wrap: wrap;
+    }
+    .step-item { flex: 1; min-width: 180px; max-width: 220px; padding: 0 16px; text-align: center; }
+    .step-circle {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--aqua), var(--blue-mid));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; margin: 0 auto 20px;
+      box-shadow: 0 8px 24px rgba(0,194,203,0.4);
+      position: relative;
+    }
+    .step-circle::after {
+      content: attr(data-num);
+      position: absolute; top: -8px; right: -8px;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--yellow); color: var(--blue-dark);
+      font-family: 'Poppins', sans-serif; font-weight: 800;
+      font-size: 0.75rem; display: flex; align-items: center; justify-content: center;
+    }
+    .step-title { font-weight: 700; color: white; font-size: 0.95rem; margin-bottom: 10px; }
+    .step-desc { font-size: 0.83rem; color: rgba(255,255,255,0.6); line-height: 1.6; }
+    .step-arrow {
+      font-size: 1.5rem; color: rgba(255,255,255,0.25);
+      align-self: center; padding-bottom: 60px; flex-shrink: 0;
+    }
+
+    /* ═══ RECENT ITEMS ═══ */
+    .items-section { padding: 100px 60px; background: var(--aqua-pale); }
+    .items-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 22px; margin-top: 48px;
+    }
+    .item-card {
+      background: white; border-radius: var(--radius-lg);
+      overflow: hidden; border: 2px solid transparent;
+      transition: all 0.3s; cursor: pointer;
+    }
+    .item-card:hover { border-color: var(--aqua); transform: translateY(-5px); box-shadow: var(--shadow-md); }
+    .item-thumb {
+      height: 150px; display: flex; align-items: center;
+      justify-content: center; font-size: 3.5rem; position: relative;
+    }
+    .thumb-lost { background: linear-gradient(135deg, #FEE2E2, #FECACA); }
+    .thumb-found { background: linear-gradient(135deg, var(--green-light), #A7F3D0); }
+    .item-body { padding: 18px 20px 22px; }
+    .item-name { font-weight: 700; font-size: 0.97rem; margin-bottom: 6px; color: var(--text-dark); }
+    .item-meta { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px; }
+    .item-location { font-size: 0.82rem; color: var(--blue-mid); display: flex; align-items: center; gap: 5px; font-weight: 600; }
+
+    /* ═══ CTA ═══ */
+    .cta-section {
+      background: linear-gradient(135deg, var(--aqua), var(--blue-dark));
+      padding: 90px 60px; text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-section h2 { font-size: clamp(1.8rem, 3.5vw, 2.8rem); color: white; font-weight: 800; margin-bottom: 14px; }
+    .cta-section p { color: rgba(255,255,255,0.75); margin-bottom: 36px; font-size: 1.05rem; }
+
+    /* ═══ FOOTER ═══ */
+    footer {
+      background: var(--blue-dark); padding: 60px;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 20px;
+    }
+    footer .nav-logo { color: white; }
+    footer p { color: rgba(255,255,255,0.5); font-size: 0.85rem; }
+
+    @media(max-width:900px){
+      .hero { padding:80px 24px; flex-direction:column; }
+      .hero-visual { display:none; }
+      .stats-bar { margin:24px 24px 0; grid-template-columns:1fr 1fr; }
+      .features-section,.how-section,.items-section,.cta-section { padding:70px 24px; }
+      .features-grid { grid-template-columns:1fr; }
+      footer { padding:40px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-logo">Find<span>It</span><span class="logo-dot"></span></div>
+  <div class="nav-links">
+    <a href="index.html" class="active">Home</a>
+    <a href="#" onclick="authNav('browse.html');return false;">Browse Items</a>
+    <a href="#how">How It Works</a>
+    <a href="#features">Features</a>
+  </div>
+  <div class="nav-actions" id="navActions">
+    <!-- filled by JS based on login state -->
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-blob1"></div>
+  <div class="hero-blob2"></div>
+  <div class="hero-content">
+    <div class="hero-badge">🔍 Community-Powered Platform</div>
+    <h1>Lost something?<br>Let the community <span class="highlight">Find It.</span></h1>
+    <p>Report lost or found items instantly. Connect with your local community to recover what matters most — fast, safe, and free.</p>
+    <div class="hero-btns">
+      <a href="#" onclick="authNav('dashboard.html','login.html');return false;" class="btn btn-yellow" style="font-size:1rem;padding:14px 32px;">🚀 Get Started Free</a>
+      <a href="#" onclick="authNav('browse.html');return false;" class="btn btn-outline-white" style="font-size:1rem;padding:14px 32px;">Browse Items →</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-card">
+      <div class="hero-card-icon hci-red">📱</div>
+      <div>
+        <strong>iPhone 15 Pro Lost</strong>
+        <small>📍 Central Metro · 2 hrs ago</small>
+      </div>
+    </div>
+    <div class="hero-card">
+      <div class="hero-card-icon hci-green">🔑</div>
+      <div>
+        <strong>Car Keys Found!</strong>
+        <small>📍 Sector 14 Market · 5 hrs ago</small>
+      </div>
+    </div>
+    <div class="hero-card">
+      <div class="hero-card-icon hci-yellow">🎒</div>
+      <div>
+        <strong>Blue Backpack Reunited ✓</strong>
+        <small>📍 City University · Today</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-num">12,4<span>00+</span></div>
+    <div class="stat-label">Items Reported</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">8,9<span>00+</span></div>
+    <div class="stat-label">Items Reunited</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num"><span>72%</span></div>
+    <div class="stat-label">Success Rate</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">50<span>+</span></div>
+    <div class="stat-label">Cities Active</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div style="text-align:center;margin-bottom:0;">
+    <div class="section-tag">✦ Why FindIt</div>
+    <h2 class="section-title">Everything you need to <span>recover</span></h2>
+    <p class="section-subtitle" style="margin:0 auto;">Built with youth and community in mind — simple, fast, and beautifully designed.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon fi-aqua">📍</div>
+      <h3>Location Mapping</h3>
+      <p>Pin exact spots on the map where items were lost or found. Precision makes recovery faster and easier.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-green">💬</div>
+      <h3>Secure Direct Chat</h3>
+      <p>Message finders and owners directly. No sharing personal numbers — privacy first, always.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-yellow">🔔</div>
+      <h3>Smart Match Alerts</h3>
+      <p>Get instant notifications when a found item matches your lost report. AI does the matching for you.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-aqua">🛡️</div>
+      <h3>Verified Community</h3>
+      <p>Every user is verified ensuring safe and trustworthy interactions across the whole platform.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-green">📸</div>
+      <h3>Photo Verification</h3>
+      <p>Upload clear photos for better identification and to verify genuine ownership claims.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-yellow">🎯</div>
+      <h3>Category Filters</h3>
+      <p>Search by electronics, bags, pets, documents, keys and more. Find it faster, every time.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-tag" style="background:rgba(0,194,203,0.15);color:var(--aqua-light);">✦ The Process</div>
+  <h2 class="section-title">3 simple steps to reunite</h2>
+  <p class="section-subtitle">Anyone can do it. It takes less than 2 minutes.</p>
+  <div class="steps-row">
+    <div class="step-item">
+      <div class="step-circle" data-num="1">📝</div>
+      <div class="step-title">Report the Item</div>
+      <div class="step-desc">Fill in details, category, description, and location. Add photos for better chances.</div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-item">
+      <div class="step-circle" data-num="2">🔔</div>
+      <div class="step-title">Community Alerted</div>
+      <div class="step-desc">Your report reaches the local network. Smart matching detects potential recoveries.</div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-item">
+      <div class="step-circle" data-num="3">🤝</div>
+      <div class="step-title">Connect & Recover</div>
+      <div class="step-desc">Chat securely, verify ownership, and arrange a safe handover. Item returned!</div>
+    </div>
+  </div>
+</section>
+
+<!-- RECENT ITEMS -->
+<section class="items-section">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+    <div>
+      <div class="section-tag">✦ Recent Reports</div>
+      <h2 class="section-title">Items near <span>you</span></h2>
+    </div>
+    <a href="#" onclick="authNav('browse.html');return false;" class="btn btn-primary">View All Items →</a>
+  </div>
+  <div class="items-grid">
+    <div class="item-card" onclick="authNav('browse.html')">
+      <div class="item-thumb thumb-lost">📱</div>
+      <div class="item-body">
+        <span class="badge badge-lost">Lost</span>
+        <div class="item-name" style="margin-top:10px;">iPhone 15 Pro — Space Black</div>
+        <div class="item-meta">Electronics • 2 hours ago</div>
+        <div class="item-location">📍 Central Metro Station</div>
+      </div>
+    </div>
+    <div class="item-card" onclick="authNav('browse.html')">
+      <div class="item-thumb thumb-found">🐕</div>
+      <div class="item-body">
+        <span class="badge badge-found">Found</span>
+        <div class="item-name" style="margin-top:10px;">Golden Labrador — No Collar</div>
+        <div class="item-meta">Pets • 5 hours ago</div>
+        <div class="item-location">📍 Green Valley Park</div>
+      </div>
+    </div>
+    <div class="item-card" onclick="authNav('browse.html')">
+      <div class="item-thumb thumb-lost">🎒</div>
+      <div class="item-body">
+        <span class="badge badge-lost">Lost</span>
+        <div class="item-name" style="margin-top:10px;">Navy Blue Jansport Backpack</div>
+        <div class="item-meta">Bags • Yesterday</div>
+        <div class="item-location">📍 City University, Block B</div>
+      </div>
+    </div>
+    <div class="item-card" onclick="authNav('browse.html')">
+      <div class="item-thumb thumb-found">🔑</div>
+      <div class="item-body">
+        <span class="badge badge-found">Found</span>
+        <div class="item-name" style="margin-top:10px;">Car Keys — Maruti Swift</div>
+        <div class="item-meta">Keys • Today</div>
+        <div class="item-location">📍 Sector 14 Market</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Ready to find what you're looking for?</h2>
+  <p>Join thousands already using FindIt to reconnect with their belongings.</p>
+  <a href="#" onclick="authNav('dashboard.html','login.html');return false;" class="btn btn-yellow" style="font-size:1.05rem;padding:16px 42px;">Create Free Account →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="nav-logo" style="color:white;">Find<span style="color:var(--aqua);">It</span><span class="logo-dot"></span></div>
+  <p>© 2025 FindIt. Reuniting people with their belongings.</p>
+  <p style="color:rgba(255,255,255,0.4);">Made with ♥ for the community</p>
+</footer>
+
+<!-- ══ AUTH-AWARE NAVIGATION SCRIPT ══ -->
+<script>
+/* ─── read auth state from localStorage ─── */
+function isLoggedIn() {
+  return !!localStorage.getItem('findit_token');
+}
+
+/* ─── Smart navigation:
+   authPage  = where to go if NOT logged in  (default: login.html)
+   memberPage = where to go if logged in      (default: same as authPage but protected)
+   If only one arg: go there if logged in, else go to login
+─── */
+function authNav(protectedPage, publicFallback) {
+  if (isLoggedIn()) {
+    window.location.href = protectedPage;
+  } else {
+    /* Save intended destination so login can redirect there after success */
+    sessionStorage.setItem('findit_redirect', protectedPage);
+    window.location.href = publicFallback || 'login.html';
+  }
+}
+
+/* ─── Build navbar buttons based on login state ─── */
+function buildNav() {
+  const wrap = document.getElementById('navActions');
+  if (!wrap) return;
+  if (isLoggedIn()) {
+    const user = JSON.parse(localStorage.getItem('findit_user') || '{}');
+    const init = ((user.firstName||'U')[0] + (user.lastName||'U')[0]).toUpperCase();
+    wrap.innerHTML = `
+      <a href="dashboard.html" class="btn btn-secondary" style="padding:9px 22px;font-size:0.88rem;">Dashboard</a>
+      <div class="nav-user-chip" onclick="location.href='profile.html'" title="My Profile">
+        <div class="nav-av">${init}</div>
+        <span>${user.firstName || 'Me'}</span>
+      </div>`;
+  } else {
+    wrap.innerHTML = `
+      <a href="login.html" class="btn btn-secondary" style="padding:9px 22px;font-size:0.88rem;">Login</a>
+      <a href="login.html" class="btn btn-primary"   style="padding:9px 22px;font-size:0.88rem;" onclick="sessionStorage.setItem('findit_tab','signup')">Sign Up Free</a>`;
+  }
+}
+
+/* ─── Toast notification ─── */
+function showToast(msg, type) {
+  const old = document.getElementById('findToast');
+  if (old) old.remove();
+  const t = document.createElement('div');
+  t.id = 'findToast';
+  t.style.cssText = `
+    position:fixed;bottom:28px;right:28px;z-index:9999;
+    background:white;border-radius:14px;padding:14px 20px;
+    display:flex;align-items:center;gap:12px;
+    box-shadow:0 20px 60px rgba(11,47,107,0.22);
+    border-left:4px solid ${type==='warn'?'#F59E0B':'#00C2CB'};
+    font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;
+    color:#334155;min-width:260px;
+    animation:toastIn .4s ease both;
+  `;
+  t.innerHTML = `<span style="font-size:1.2rem">${type==='warn'?'🔒':'✅'}</span><span>${msg}</span>`;
+  if (!document.getElementById('toastKF')) {
+    const s = document.createElement('style');
+    s.id = 'toastKF';
+    s.textContent = '@keyframes toastIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}';
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.animation = 'toastIn .35s ease reverse both'; setTimeout(()=>t.remove(), 350); }, 3200);
+}
+
+/* ─── Run on load ─── */
+buildNav();
+
+/* ─── If user came from a protected link and is now logged in, they've been redirected.
+       If NOT logged in and tries to click Browse Items etc., show a gentle toast first
+       then redirect. We hook into authNav to add that behavior. ─── */
+const _origAuthNav = authNav;
+window.authNav = function(protectedPage, publicFallback) {
+  if (!isLoggedIn()) {
+    showToast('Please login or sign up to continue 🔐', 'warn');
+    setTimeout(() => {
+      sessionStorage.setItem('findit_redirect', protectedPage);
+      window.location.href = publicFallback || 'login.html';
+    }, 900);
+  } else {
+    window.location.href = protectedPage;
+  }
+};
+</script>
+
+<style>
+/* Nav user chip shown when logged in */
+.nav-user-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--aqua-pale); border: 2px solid var(--border);
+  border-radius: 99px; padding: 6px 16px 6px 6px;
+  cursor: pointer; transition: border-color .2s, transform .2s;
+  font-weight: 700; font-size: 0.88rem; color: var(--blue-dark);
+}
+.nav-user-chip:hover { border-color: var(--aqua); transform: translateY(-1px); }
+.nav-av {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--aqua), var(--blue-mid));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-weight: 800; color: white;
+}
+</style>
+</body>
+</html>

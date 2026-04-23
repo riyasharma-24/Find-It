@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FindIt — Report Item</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    body { background: var(--off-white); }
+    .app-shell { display: flex; height: 100vh; overflow: hidden; }
+    .sidebar { width: 250px; flex-shrink: 0; background: white; border-right: 2px solid var(--border); display: flex; flex-direction: column; }
+    .sidebar-logo { padding: 24px 24px 20px; font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.5rem; color: var(--blue-dark); border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 6px; }
+    .sidebar-logo span { color: var(--aqua); }
+    .sidebar-logo .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); }
+    .sidebar-section { padding: 20px 14px 8px; }
+    .sidebar-section-label { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); margin-bottom: 8px; padding: 0 10px; }
+    .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); transition: all 0.2s; margin-bottom: 2px; text-decoration: none; }
+    .sidebar-item:hover { background: var(--aqua-pale); color: var(--blue-dark); }
+    .sidebar-item.active { background: linear-gradient(135deg, var(--aqua-pale), #d4f5f6); color: var(--blue-dark); border-left: 3px solid var(--aqua); }
+    .sidebar-item .si-icon { font-size: 1.1rem; width: 22px; text-align: center; }
+    .sidebar-badge { margin-left: auto; background: var(--aqua); color: white; border-radius: 99px; padding: 1px 8px; font-size: 0.7rem; font-weight: 800; }
+    .sidebar-badge.yellow { background: var(--yellow); color: var(--blue-dark); }
+    .sidebar-footer { margin-top: auto; padding: 16px 18px; border-top: 2px solid var(--border); }
+    .sidebar-user { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 10px; border-radius: 12px; }
+    .sidebar-user:hover { background: var(--light-gray); }
+    .sidebar-av { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, var(--aqua), var(--blue-mid)); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem; color: white; }
+    .sidebar-uname { font-weight: 700; font-size: 0.88rem; color: var(--text-dark); }
+    .sidebar-urole { font-size: 0.75rem; color: var(--text-muted); }
+    .main-area { flex: 1; overflow-y: auto; }
+    .topbar { background: white; border-bottom: 2px solid var(--border); padding: 0 32px; height: 68px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .topbar-left h2 { font-size: 1.15rem; font-weight: 800; color: var(--text-dark); }
+    .topbar-left p { font-size: 0.8rem; color: var(--text-muted); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+    .content { padding: 32px; max-width: 900px; }
+
+    /* TYPE SELECTOR */
+    .type-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+    .type-card {
+      border: 3px solid var(--border); border-radius: var(--radius-lg);
+      padding: 28px 24px; cursor: pointer; text-align: center;
+      transition: all 0.25s; background: white;
+    }
+    .type-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .type-card.selected-lost { border-color: #EF4444; background: #FEF2F2; }
+    .type-card.selected-found { border-color: var(--green); background: #F0FDF4; }
+    .type-card-icon { font-size: 3rem; margin-bottom: 12px; }
+    .type-card h3 { font-size: 1.05rem; font-weight: 800; margin-bottom: 6px; }
+    .type-card p { font-size: 0.85rem; color: var(--text-muted); }
+    .type-card.selected-lost h3 { color: #DC2626; }
+    .type-card.selected-found h3 { color: var(--green-dark); }
+
+    /* FORM CARD */
+    .form-card {
+      background: white; border-radius: var(--radius-lg);
+      border: 2px solid var(--border); padding: 32px;
+    }
+    .form-card-title {
+      font-size: 1rem; font-weight: 800; color: var(--text-dark);
+      margin-bottom: 24px; display: flex; align-items: center; gap: 10px;
+      padding-bottom: 16px; border-bottom: 2px solid var(--border);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+    /* PHOTO UPLOAD */
+    .photo-upload {
+      border: 3px dashed var(--border); border-radius: var(--radius-md);
+      padding: 40px; text-align: center; cursor: pointer;
+      transition: all 0.2s; background: var(--off-white);
+    }
+    .photo-upload:hover { border-color: var(--aqua); background: var(--aqua-pale); }
+    .photo-upload-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .photo-upload h4 { font-weight: 700; color: var(--text-dark); margin-bottom: 6px; }
+    .photo-upload p { font-size: 0.83rem; color: var(--text-muted); }
+
+    /* SUBMIT */
+    .submit-bar {
+      background: white; border: 2px solid var(--border);
+      border-radius: var(--radius-lg); padding: 22px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 22px; flex-wrap: wrap; gap: 14px;
+    }
+    .submit-info { font-size: 0.85rem; color: var(--text-muted); }
+    .submit-info strong { color: var(--text-dark); }
+    .submit-btns { display: flex; gap: 12px; }
+
+    /* SUCCESS MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(11,47,107,0.5);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+    .modal {
+      background: white; border-radius: var(--radius-xl); padding: 48px 40px;
+      text-align: center; max-width: 420px; width: 90%;
+      transform: scale(0.9); transition: transform 0.3s;
+    }
+    .modal-overlay.show .modal { transform: scale(1); }
+    .modal-icon { font-size: 4rem; margin-bottom: 20px; }
+    .modal h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 10px; }
+    .modal p { color: var(--text-muted); line-height: 1.6; margin-bottom: 28px; }
+    .modal-btns { display: flex; gap: 12px; justify-content: center; }
+
+    @media(max-width:768px){ .sidebar{width:64px} .sidebar-logo span,.sidebar-logo .logo-dot{display:none} .sidebar-item span:not(.si-icon){display:none} .form-row{grid-template-columns:1fr} .type-selector{grid-template-columns:1fr} .content{padding:20px} }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">Find<span>It</span><span class="logo-dot"></span></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Main</div>
+      <a class="sidebar-item" href="dashboard.html"><span class="si-icon">🏠</span><span>Dashboard</span></a>
+      <a class="sidebar-item" href="browse.html"><span class="si-icon">🔍</span><span>Browse Items</span></a>
+      <a class="sidebar-item active" href="report.html"><span class="si-icon">📝</span><span>Report Item</span><span class="sidebar-badge yellow">New</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Community</div>
+      <a class="sidebar-item" href="chat.html"><span class="si-icon">💬</span><span>Messages</span><span class="sidebar-badge">3</span></a>
+      <a class="sidebar-item" href="profile.html"><span class="si-icon">👤</span><span>My Profile</span></a>
+    </div>
+    <div class="sidebar-section">
+      <a class="sidebar-item" href="#"><span class="si-icon">⚙️</span><span>Settings</span></a>
+      <a class="sidebar-item" href="index.html"><span class="si-icon">🚪</span><span>Logout</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" onclick="location.href='profile.html'">
+        <div class="sidebar-av">AS</div>
+        <div><div class="sidebar-uname">Arjun Sharma</div><div class="sidebar-urole">⭐ Top Contributor</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <div class="topbar">
+      <div class="topbar-left"><h2>Report an Item</h2><p>Help the community find what's lost</p></div>
+      <div class="topbar-right">
+        <a href="browse.html" class="btn btn-secondary" style="padding:8px 18px;font-size:0.85rem;">← Browse Items</a>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- STEP 1: TYPE -->
+      <div style="margin-bottom:10px;">
+        <div class="section-tag">Step 1 of 3</div>
+        <h2 class="section-title" style="font-size:1.4rem;">What are you reporting?</h2>
+      </div>
+      <div class="type-selector">
+        <div class="type-card selected-lost" id="lostCard" onclick="selectType('lost')">
+          <div class="type-card-icon">😢</div>
+          <h3>I Lost Something</h3>
+          <p>Report an item that went missing. We'll alert the community to help find it.</p>
+        </div>
+        <div class="type-card" id="foundCard" onclick="selectType('found')">
+          <div class="type-card-icon">🎉</div>
+          <h3>I Found Something</h3>
+          <p>Report something you found so we can reunite it with its rightful owner.</p>
+        </div>
+      </div>
+
+      <!-- STEP 2: DETAILS -->
+      <div style="margin-bottom:16px; margin-top:32px;">
+        <div class="section-tag">Step 2 of 3</div>
+        <h2 class="section-title" style="font-size:1.4rem;">Item Details</h2>
+      </div>
+      <div class="form-card" style="margin-bottom:22px;">
+        <div class="form-card-title">📋 Basic Information</div>
+        <div class="form-row" style="margin-bottom:18px;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Item Name *</label>
+            <input class="form-control" type="text" placeholder="e.g. iPhone 15 Pro, Black Wallet…"/>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Category *</label>
+            <select class="form-control">
+              <option value="">Select a category…</option>
+              <option>📱 Electronics</option>
+              <option>👜 Bags & Wallets</option>
+              <option>📄 Documents & Cards</option>
+              <option>🐾 Pets</option>
+              <option>🔑 Keys</option>
+              <option>👗 Clothing</option>
+              <option>💍 Jewelry</option>
+              <option>📚 Books & Stationery</option>
+              <option>🎵 Musical Instruments</option>
+              <option>🎸 Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Detailed Description *</label>
+          <textarea class="form-control" rows="4" placeholder="Describe the item — color, brand, model, unique features, what was inside, any identifying marks…" style="resize:vertical;"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Brand / Make</label>
+            <input class="form-control" type="text" placeholder="e.g. Apple, Samsung, Zara…"/>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Color</label>
+            <input class="form-control" type="text" placeholder="e.g. Black, Navy Blue…"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card" style="margin-bottom:22px;">
+        <div class="form-card-title">📍 Location & Time</div>
+        <div class="form-row" style="margin-bottom:18px;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Location *</label>
+            <input class="form-control" type="text" placeholder="Where was it lost / found?"/>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Area / Landmark</label>
+            <input class="form-control" type="text" placeholder="e.g. Near Gate 3, Platform 2…"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Date *</label>
+            <input class="form-control" type="date" id="dateField"/>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Approximate Time</label>
+            <input class="form-control" type="time"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: PHOTOS & CONTACT -->
+      <div style="margin-bottom:16px; margin-top:32px;">
+        <div class="section-tag">Step 3 of 3</div>
+        <h2 class="section-title" style="font-size:1.4rem;">Photos & Contact</h2>
+      </div>
+      <div class="form-card" style="margin-bottom:22px;">
+        <div class="form-card-title">📸 Upload Photos <span style="font-size:0.8rem;color:var(--text-muted);font-weight:500;">(Recommended — increases recovery chances by 3x)</span></div>
+        <div class="photo-upload" onclick="alert('In a real app, this would open your file picker!')">
+          <div class="photo-upload-icon">📷</div>
+          <h4>Drop photos here or click to upload</h4>
+          <p>JPG, PNG, WEBP — up to 10MB per photo. Max 5 photos.</p>
+        </div>
+      </div>
+
+      <div class="form-card" style="margin-bottom:22px;">
+        <div class="form-card-title">📞 Contact Preferences</div>
+        <div class="form-row" style="margin-bottom:18px;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Phone (optional)</label>
+            <input class="form-control" type="tel" placeholder="+91 98765 43210"/>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Preferred Contact Method</label>
+            <select class="form-control">
+              <option>💬 FindIt Chat Only</option>
+              <option>📞 Phone + Chat</option>
+              <option>📧 Email + Chat</option>
+            </select>
+          </div>
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.88rem;color:var(--text-muted);cursor:pointer;line-height:1.5;">
+          <input type="checkbox" checked style="accent-color:var(--aqua);width:16px;height:16px;margin-top:2px;flex-shrink:0;"/>
+          Notify me via email when a matching item is reported or someone contacts me about this report.
+        </label>
+      </div>
+
+      <!-- SUBMIT -->
+      <div class="submit-bar">
+        <div class="submit-info"><strong>Almost done!</strong> Review your details before submitting. Your report will be visible to the community immediately.</div>
+        <div class="submit-btns">
+          <button class="btn btn-secondary" onclick="location.href='browse.html'">Cancel</button>
+          <button class="btn btn-primary" onclick="submitReport()">🚀 Submit Report</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal">
+    <div class="modal-icon">🎉</div>
+    <h2>Report Submitted!</h2>
+    <p>Your report has been published and the community has been notified. We'll alert you the moment a match is found!</p>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="location.href='browse.html'">Browse Items</button>
+      <button class="btn btn-primary" onclick="location.href='dashboard.html'">Go to Dashboard</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentType = 'lost';
+
+  function selectType(type) {
+    currentType = type;
+    document.getElementById('lostCard').className = 'type-card' + (type === 'lost' ? ' selected-lost' : '');
+    document.getElementById('foundCard').className = 'type-card' + (type === 'found' ? ' selected-found' : '');
+  }
+
+  function submitReport() {
+    document.getElementById('successModal').classList.add('show');
+  }
+
+  // Set today's date as default
+  document.getElementById('dateField').valueAsDate = new Date();
+</script>
+</body>
+</html>

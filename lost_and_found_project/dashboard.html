@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+(function(){
+  var token=localStorage.getItem("findit_token");
+  var user=null;
+  try{user=JSON.parse(localStorage.getItem("findit_user"));}catch(e){}
+  if(!token||!user){
+    sessionStorage.setItem("findit_redirect",window.location.href);
+    window.location.replace("login.html");
+    return;
+  }
+  window.AUTH={
+    getToken:function(){return localStorage.getItem("findit_token");},
+    getUser:function(){try{return JSON.parse(localStorage.getItem("findit_user"));}catch(e){return null;}},
+    isLoggedIn:function(){return !!localStorage.getItem("findit_token");},
+    logout:function(){localStorage.removeItem("findit_token");localStorage.removeItem("findit_user");window.location.replace("login.html");}
+  };
+  document.addEventListener("DOMContentLoaded",function(){
+    if(!user)return;
+    var full=user.firstName+" "+user.lastName;
+    var init=(user.firstName[0]+user.lastName[0]).toUpperCase();
+    document.querySelectorAll(".js-name").forEach(function(e){e.textContent=full;});
+    document.querySelectorAll(".js-first").forEach(function(e){e.textContent=user.firstName;});
+    document.querySelectorAll(".js-init").forEach(function(e){e.textContent=init;});
+    document.querySelectorAll(".js-email").forEach(function(e){e.textContent=user.email||"";});
+    document.querySelectorAll(".js-phone").forEach(function(e){e.textContent=user.phone||"—";});
+  });
+})();
+</script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FindIt — Dashboard</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    body { background: var(--off-white); }
+
+    /* ── APP LAYOUT ── */
+    .app-shell { display: flex; height: 100vh; overflow: hidden; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 250px; flex-shrink: 0;
+      background: white; border-right: 2px solid var(--border);
+      display: flex; flex-direction: column; padding: 0;
+      overflow-y: auto;
+    }
+    .sidebar-logo {
+      padding: 24px 24px 20px;
+      font-family: 'Poppins', sans-serif; font-weight: 800;
+      font-size: 1.5rem; color: var(--blue-dark);
+      border-bottom: 2px solid var(--border);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .sidebar-logo span { color: var(--aqua); }
+    .sidebar-logo .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); }
+
+    .sidebar-section { padding: 20px 14px 8px; }
+    .sidebar-section-label {
+      font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-light); margin-bottom: 8px;
+      padding: 0 10px;
+    }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 14px; border-radius: 12px; cursor: pointer;
+      font-weight: 600; font-size: 0.9rem; color: var(--text-muted);
+      transition: all 0.2s; margin-bottom: 2px; text-decoration: none;
+    }
+    .sidebar-item:hover { background: var(--aqua-pale); color: var(--blue-dark); }
+    .sidebar-item.active {
+      background: linear-gradient(135deg, var(--aqua-pale), #d4f5f6);
+      color: var(--blue-dark); border-left: 3px solid var(--aqua);
+    }
+    .sidebar-item .si-icon { font-size: 1.1rem; width: 22px; text-align: center; }
+    .sidebar-badge {
+      margin-left: auto; background: var(--aqua); color: white;
+      border-radius: 99px; padding: 1px 8px; font-size: 0.7rem; font-weight: 800;
+    }
+    .sidebar-badge.yellow { background: var(--yellow); color: var(--blue-dark); }
+
+    .sidebar-footer {
+      margin-top: auto; padding: 16px 18px;
+      border-top: 2px solid var(--border);
+    }
+    .sidebar-user {
+      display: flex; align-items: center; gap: 12px; cursor: pointer;
+      padding: 10px; border-radius: 12px; transition: background 0.2s;
+    }
+    .sidebar-user:hover { background: var(--light-gray); }
+    .sidebar-av {
+      width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--aqua), var(--blue-mid));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.9rem; color: white;
+    }
+    .sidebar-uname { font-weight: 700; font-size: 0.88rem; color: var(--text-dark); }
+    .sidebar-urole { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* MAIN */
+    .main-area { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+    /* TOPBAR */
+    .topbar {
+      background: white; border-bottom: 2px solid var(--border);
+      padding: 0 32px; height: 68px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-left h2 { font-size: 1.15rem; font-weight: 800; color: var(--text-dark); }
+    .topbar-left p { font-size: 0.8rem; color: var(--text-muted); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .search-bar {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--off-white); border: 2px solid var(--border);
+      border-radius: 99px; padding: 8px 18px;
+      transition: border-color 0.2s;
+    }
+    .search-bar:focus-within { border-color: var(--aqua); background: white; }
+    .search-bar input {
+      background: none; border: none; outline: none;
+      font-size: 0.88rem; width: 180px; font-family: 'Nunito', sans-serif;
+      color: var(--text-body);
+    }
+    .search-bar input::placeholder { color: var(--text-light); }
+    .icon-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--off-white); border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1rem; transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+    .icon-btn:hover { border-color: var(--aqua); background: var(--aqua-pale); }
+    .notif-dot {
+      position: absolute; top: -2px; right: -2px; width: 14px; height: 14px;
+      border-radius: 50%; background: var(--aqua); color: white;
+      font-size: 0.6rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
+      border: 2px solid white;
+    }
+
+    /* CONTENT */
+    .content { padding: 32px; flex: 1; }
+
+    /* GREETING */
+    .greeting-bar {
+      background: linear-gradient(135deg, var(--blue-dark), #1A56B0);
+      border-radius: var(--radius-lg); padding: 28px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px; position: relative; overflow: hidden;
+    }
+    .greeting-bar::before {
+      content: ''; position: absolute; right: -60px; top: -60px;
+      width: 220px; height: 220px; border-radius: 50%;
+      background: rgba(0,194,203,0.15);
+    }
+    .greeting-bar::after {
+      content: ''; position: absolute; right: 60px; bottom: -40px;
+      width: 150px; height: 150px; border-radius: 50%;
+      background: rgba(250,204,21,0.1);
+    }
+    .greeting-text { position: relative; z-index: 1; }
+    .greeting-text p { color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-bottom: 4px; }
+    .greeting-text h2 { color: white; font-size: 1.5rem; font-weight: 800; }
+    .greeting-text h2 span { color: var(--aqua-light); }
+    .greeting-emoji { font-size: 3rem; position: relative; z-index: 1; }
+
+    /* STAT CARDS */
+    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 28px; }
+    .stat-card {
+      background: white; border-radius: var(--radius-md); padding: 22px;
+      border: 2px solid var(--border);
+      display: flex; flex-direction: column; gap: 10px;
+      transition: all 0.25s;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: transparent; }
+    .stat-card-top { display: flex; align-items: center; justify-content: space-between; }
+    .stat-icon {
+      width: 46px; height: 46px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+    }
+    .si-red { background: #FEE2E2; }
+    .si-green { background: var(--green-light); }
+    .si-aqua { background: var(--aqua-pale); }
+    .si-yellow { background: var(--yellow-light); }
+    .stat-val { font-family: 'Poppins', sans-serif; font-size: 2rem; font-weight: 800; color: var(--text-dark); }
+    .stat-label { font-size: 0.82rem; color: var(--text-muted); font-weight: 600; }
+    .stat-delta { font-size: 0.75rem; font-weight: 700; }
+    .delta-up { color: var(--green-dark); }
+    .delta-down { color: #DC2626; }
+
+    /* TWO COLUMN */
+    .two-col { display: grid; grid-template-columns: 1.4fr 1fr; gap: 22px; margin-bottom: 28px; }
+
+    /* SECTION CARD */
+    .sec-card {
+      background: white; border-radius: var(--radius-lg);
+      border: 2px solid var(--border); overflow: hidden;
+    }
+    .sec-card-header {
+      padding: 18px 22px; border-bottom: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .sec-card-header h3 { font-size: 0.95rem; font-weight: 800; color: var(--text-dark); }
+    .view-all-btn { color: var(--blue-mid); font-size: 0.82rem; font-weight: 700; cursor: pointer; background: none; border: none; font-family: 'Nunito', sans-serif; }
+
+    /* REPORT LIST */
+    .report-list { display: flex; flex-direction: column; }
+    .report-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 22px; border-bottom: 1px solid var(--border);
+      transition: background 0.2s; cursor: pointer;
+    }
+    .report-item:last-child { border-bottom: none; }
+    .report-item:hover { background: var(--off-white); }
+    .ri-emoji {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; flex-shrink: 0;
+    }
+    .ri-info { flex: 1; }
+    .ri-name { font-weight: 700; font-size: 0.9rem; color: var(--text-dark); }
+    .ri-meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+    .ri-right { text-align: right; }
+    .ri-time { font-size: 0.74rem; color: var(--text-light); margin-top: 5px; }
+
+    /* MAP CARD */
+    .map-card {
+      background: linear-gradient(160deg, var(--aqua-pale), white);
+      border-radius: var(--radius-lg); border: 2px solid var(--border);
+      min-height: 320px; position: relative; overflow: hidden;
+    }
+    .map-grid {
+      position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(0,194,203,0.08) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0,194,203,0.08) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .map-header { padding: 18px 22px; border-bottom: 2px solid var(--border); background: white; position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; }
+    .map-header h3 { font-size: 0.95rem; font-weight: 800; }
+    .map-pins-area { position: relative; height: 250px; }
+    .map-pin { position: absolute; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+    .pin {
+      width: 28px; height: 28px; border-radius: 50% 50% 50% 0%;
+      transform: rotate(-45deg);
+      display: flex; align-items: center; justify-content: center;
+      animation: bounce 2.5s ease-in-out infinite;
+      border: 2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .pin.red { background: #EF4444; }
+    .pin.green { background: var(--green); }
+    .pin.aqua { background: var(--aqua); }
+    @keyframes bounce { 0%,100%{transform:rotate(-45deg) translateY(0)} 50%{transform:rotate(-45deg) translateY(-8px)} }
+    .map-label-box {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: white; border: 2px solid var(--border); border-radius: 10px;
+      padding: 8px 18px; font-size: 0.82rem; font-weight: 700; color: var(--text-dark);
+      white-space: nowrap;
+    }
+
+    /* QUICK ACTION BUTTONS */
+    .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+    .qa-btn {
+      display: flex; align-items: center; gap: 14px;
+      padding: 20px 22px; border-radius: var(--radius-md);
+      cursor: pointer; text-decoration: none; border: none;
+      transition: transform 0.2s, box-shadow 0.2s; font-family: 'Nunito', sans-serif;
+    }
+    .qa-btn:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .qa-lost {
+      background: linear-gradient(135deg, #EF4444, #DC2626);
+      color: white;
+    }
+    .qa-found {
+      background: linear-gradient(135deg, var(--green), var(--green-dark));
+      color: white;
+    }
+    .qa-icon { font-size: 2rem; }
+    .qa-label { font-weight: 800; font-size: 1rem; }
+    .qa-sub { font-size: 0.78rem; opacity: 0.8; margin-top: 2px; }
+
+    @media(max-width:1100px) { .stat-grid { grid-template-columns: 1fr 1fr; } .two-col { grid-template-columns: 1fr; } }
+    @media(max-width:768px) { .sidebar { width: 64px; } .sidebar-logo span, .sidebar-logo .logo-dot { display:none; } .sidebar-item span:not(.si-icon) { display:none; } .sidebar-badge { display:none; } .sidebar-uname,.sidebar-urole { display:none; } .content { padding: 20px; } }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">Find<span>It</span><span class="logo-dot"></span></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Main</div>
+      <a class="sidebar-item active" href="dashboard.html">
+        <span class="si-icon">🏠</span><span>Dashboard</span>
+      </a>
+      <a class="sidebar-item" href="browse.html">
+        <span class="si-icon">🔍</span><span>Browse Items</span>
+      </a>
+      <a class="sidebar-item" href="report.html">
+        <span class="si-icon">📝</span><span>Report Item</span>
+        <span class="sidebar-badge yellow">New</span>
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Community</div>
+      <a class="sidebar-item" href="chat.html">
+        <span class="si-icon">💬</span><span>Messages</span>
+        <span class="sidebar-badge">3</span>
+      </a>
+      <a class="sidebar-item" href="profile.html">
+        <span class="si-icon">👤</span><span>My Profile</span>
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Account</div>
+      <a class="sidebar-item" href="#">
+        <span class="si-icon">⚙️</span><span>Settings</span>
+      </a>
+      <a class="sidebar-item" href="#" onclick="AUTH.logout();return false;">
+        <span class="si-icon">🚪</span><span>Logout</span>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" onclick="location.href='profile.html'">
+        <div class="sidebar-av">AS</div>
+        <div>
+          <div class="sidebar-uname">Arjun Sharma</div>
+          <div class="sidebar-urole">⭐ Top Contributor</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-area">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Dashboard</h2>
+        <p>Friday, 17 April 2026 · Yamuna Nagar</p>
+      </div>
+      <div class="topbar-right">
+        <div class="search-bar">
+          <span>🔍</span>
+          <input type="text" placeholder="Search items, locations…"/>
+        </div>
+        <div class="icon-btn" onclick="alert('No new notifications at the moment!')">
+          🔔<span class="notif-dot">3</span>
+        </div>
+        <div class="sidebar-av" style="width:40px;height:40px;cursor:pointer;" onclick="location.href='profile.html'">AS</div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- GREETING -->
+      <div class="greeting-bar">
+        <div class="greeting-text">
+          <p>Good morning, 👋 Welcome back!</p>
+          <h2>Hello, <span>Arjun!</span> Let's make a difference today.</h2>
+        </div>
+        <div class="greeting-emoji">🔍</div>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-card-top">
+            <div class="stat-icon si-red">❌</div>
+            <span class="stat-delta delta-down">↑ 1 this week</span>
+          </div>
+          <div class="stat-val">3</div>
+          <div class="stat-label">Items I Reported Lost</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-top">
+            <div class="stat-icon si-green">✅</div>
+            <span class="stat-delta delta-up">↑ 2 this week</span>
+          </div>
+          <div class="stat-val">7</div>
+          <div class="stat-label">Items I Found & Shared</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-top">
+            <div class="stat-icon si-aqua">🤝</div>
+            <span class="stat-delta delta-up">+1 this month</span>
+          </div>
+          <div class="stat-val">5</div>
+          <div class="stat-label">Successful Reunions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-top">
+            <div class="stat-icon si-yellow">⭐</div>
+            <span class="stat-delta delta-up">Top 5%</span>
+          </div>
+          <div class="stat-val">4.9</div>
+          <div class="stat-label">My Community Rating</div>
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS -->
+      <div class="quick-actions">
+        <button class="qa-btn qa-lost" onclick="location.href='report.html'">
+          <div class="qa-icon">😢</div>
+          <div>
+            <div class="qa-label">Report Lost Item</div>
+            <div class="qa-sub">Something went missing? Tell us!</div>
+          </div>
+        </button>
+        <button class="qa-btn qa-found" onclick="location.href='report.html'">
+          <div class="qa-icon">🎉</div>
+          <div>
+            <div class="qa-label">Report Found Item</div>
+            <div class="qa-sub">Found something? Help return it!</div>
+          </div>
+        </button>
+      </div>
+
+      <!-- TWO COLUMN -->
+      <div class="two-col">
+
+        <!-- RECENT REPORTS -->
+        <div class="sec-card">
+          <div class="sec-card-header">
+            <h3>🕐 Recent Reports Near You</h3>
+            <button class="view-all-btn" onclick="location.href='browse.html'">View all →</button>
+          </div>
+          <div class="report-list">
+            <div class="report-item" onclick="location.href='chat.html'">
+              <div class="ri-emoji" style="background:#FEE2E2;">📱</div>
+              <div class="ri-info">
+                <div class="ri-name">iPhone 15 Pro — Space Black</div>
+                <div class="ri-meta">📍 Central Metro Station · Electronics</div>
+              </div>
+              <div class="ri-right">
+                <span class="badge badge-lost">Lost</span>
+                <div class="ri-time">2 hrs ago</div>
+              </div>
+            </div>
+            <div class="report-item" onclick="location.href='chat.html'">
+              <div class="ri-emoji" style="background:var(--green-light);">🔑</div>
+              <div class="ri-info">
+                <div class="ri-name">Car Keys — Maruti Swift</div>
+                <div class="ri-meta">📍 Sector 14 Market · Keys</div>
+              </div>
+              <div class="ri-right">
+                <span class="badge badge-found">Found</span>
+                <div class="ri-time">5 hrs ago</div>
+              </div>
+            </div>
+            <div class="report-item">
+              <div class="ri-emoji" style="background:#FEE2E2;">👜</div>
+              <div class="ri-info">
+                <div class="ri-name">Black Leather Handbag — Zara</div>
+                <div class="ri-meta">📍 City Mall, Gate 3 · Bags</div>
+              </div>
+              <div class="ri-right">
+                <span class="badge badge-lost">Lost</span>
+                <div class="ri-time">Yesterday</div>
+              </div>
+            </div>
+            <div class="report-item">
+              <div class="ri-emoji" style="background:var(--green-light);">🐕</div>
+              <div class="ri-info">
+                <div class="ri-name">Golden Labrador — No Collar</div>
+                <div class="ri-meta">📍 Green Valley Park · Pets</div>
+              </div>
+              <div class="ri-right">
+                <span class="badge badge-found">Found</span>
+                <div class="ri-time">2 days ago</div>
+              </div>
+            </div>
+            <div class="report-item">
+              <div class="ri-emoji" style="background:#FEE2E2;">🎒</div>
+              <div class="ri-info">
+                <div class="ri-name">Navy Blue Jansport Backpack</div>
+                <div class="ri-meta">📍 City University · Bags</div>
+              </div>
+              <div class="ri-right">
+                <span class="badge badge-lost">Lost</span>
+                <div class="ri-time">3 days ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MAP -->
+        <div>
+          <div class="map-card">
+            <div class="map-header">
+              <h3>📍 Items Map — Yamuna Nagar</h3>
+              <span class="badge badge-pending">5 Nearby</span>
+            </div>
+            <div class="map-grid"></div>
+            <div class="map-pins-area">
+              <div class="map-pin" style="top:20%;left:28%;"><div class="pin red"></div></div>
+              <div class="map-pin" style="top:45%;left:60%;"><div class="pin green"></div></div>
+              <div class="map-pin" style="top:65%;left:35%;"><div class="pin red"></div></div>
+              <div class="map-pin" style="top:30%;left:72%;"><div class="pin aqua"></div></div>
+              <div class="map-pin" style="top:55%;left:15%;"><div class="pin green"></div></div>
+              <div class="map-label-box">🗺️ Tap a pin to view item details</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FindIt — Browse Items</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    body { background: var(--off-white); }
+    .app-shell { display: flex; height: 100vh; overflow: hidden; }
+
+    /* SIDEBAR - same as dashboard */
+    .sidebar { width: 250px; flex-shrink: 0; background: white; border-right: 2px solid var(--border); display: flex; flex-direction: column; }
+    .sidebar-logo { padding: 24px 24px 20px; font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.5rem; color: var(--blue-dark); border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 6px; }
+    .sidebar-logo span { color: var(--aqua); }
+    .sidebar-logo .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); }
+    .sidebar-section { padding: 20px 14px 8px; }
+    .sidebar-section-label { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); margin-bottom: 8px; padding: 0 10px; }
+    .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); transition: all 0.2s; margin-bottom: 2px; text-decoration: none; }
+    .sidebar-item:hover { background: var(--aqua-pale); color: var(--blue-dark); }
+    .sidebar-item.active { background: linear-gradient(135deg, var(--aqua-pale), #d4f5f6); color: var(--blue-dark); border-left: 3px solid var(--aqua); }
+    .sidebar-item .si-icon { font-size: 1.1rem; width: 22px; text-align: center; }
+    .sidebar-badge { margin-left: auto; background: var(--aqua); color: white; border-radius: 99px; padding: 1px 8px; font-size: 0.7rem; font-weight: 800; }
+    .sidebar-badge.yellow { background: var(--yellow); color: var(--blue-dark); }
+    .sidebar-footer { margin-top: auto; padding: 16px 18px; border-top: 2px solid var(--border); }
+    .sidebar-user { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 10px; border-radius: 12px; transition: background 0.2s; }
+    .sidebar-user:hover { background: var(--light-gray); }
+    .sidebar-av { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, var(--aqua), var(--blue-mid)); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem; color: white; }
+    .sidebar-uname { font-weight: 700; font-size: 0.88rem; color: var(--text-dark); }
+    .sidebar-urole { font-size: 0.75rem; color: var(--text-muted); }
+
+    .main-area { flex: 1; overflow-y: auto; }
+    .topbar { background: white; border-bottom: 2px solid var(--border); padding: 0 32px; height: 68px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .topbar-left h2 { font-size: 1.15rem; font-weight: 800; color: var(--text-dark); }
+    .topbar-left p { font-size: 0.8rem; color: var(--text-muted); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .search-bar { display: flex; align-items: center; gap: 8px; background: var(--off-white); border: 2px solid var(--border); border-radius: 99px; padding: 8px 18px; transition: border-color 0.2s; }
+    .search-bar:focus-within { border-color: var(--aqua); background: white; }
+    .search-bar input { background: none; border: none; outline: none; font-size: 0.88rem; width: 200px; font-family: 'Nunito', sans-serif; color: var(--text-body); }
+    .search-bar input::placeholder { color: var(--text-light); }
+    .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--off-white); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; transition: border-color 0.2s; position: relative; }
+    .icon-btn:hover { border-color: var(--aqua); }
+    .notif-dot { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; border-radius: 50%; background: var(--aqua); color: white; font-size: 0.6rem; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+
+    .content { padding: 32px; }
+
+    /* FILTER BAR */
+    .filter-bar {
+      background: white; border: 2px solid var(--border);
+      border-radius: var(--radius-lg); padding: 20px 24px;
+      margin-bottom: 24px; display: flex; align-items: center;
+      gap: 16px; flex-wrap: wrap;
+    }
+    .filter-tabs { display: flex; gap: 8px; }
+    .filter-tab {
+      padding: 8px 18px; border-radius: 99px; cursor: pointer;
+      font-weight: 700; font-size: 0.85rem; border: 2px solid var(--border);
+      background: white; color: var(--text-muted); transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+    }
+    .filter-tab:hover { border-color: var(--aqua); color: var(--blue-mid); }
+    .filter-tab.active-all { background: var(--blue-dark); color: white; border-color: var(--blue-dark); }
+    .filter-tab.active-lost { background: #EF4444; color: white; border-color: #EF4444; }
+    .filter-tab.active-found { background: var(--green); color: white; border-color: var(--green); }
+    .filter-sep { width: 1px; height: 32px; background: var(--border); }
+    .cat-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .cat-tab {
+      padding: 6px 14px; border-radius: 99px; cursor: pointer;
+      font-weight: 700; font-size: 0.8rem;
+      background: var(--aqua-pale); color: var(--blue-mid);
+      border: 1px solid var(--border); transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+    }
+    .cat-tab:hover, .cat-tab.active { background: var(--aqua); color: white; border-color: var(--aqua); }
+    .sort-select { margin-left: auto; background: var(--off-white); border: 2px solid var(--border); border-radius: 10px; padding: 8px 14px; font-family: 'Nunito', sans-serif; font-weight: 600; font-size: 0.85rem; color: var(--text-body); outline: none; cursor: pointer; }
+    .sort-select:focus { border-color: var(--aqua); }
+
+    /* RESULTS HEADER */
+    .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .results-header h3 { font-size: 1rem; font-weight: 800; color: var(--text-dark); }
+    .results-count { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+
+    /* ITEMS GRID */
+    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+    .item-card {
+      background: white; border-radius: var(--radius-lg);
+      border: 2px solid var(--border); overflow: hidden;
+      transition: all 0.28s; cursor: pointer;
+    }
+    .item-card:hover { border-color: var(--aqua); transform: translateY(-5px); box-shadow: var(--shadow-md); }
+    .item-thumb { height: 160px; display: flex; align-items: center; justify-content: center; font-size: 3.8rem; position: relative; }
+    .thumb-lost { background: linear-gradient(135deg, #FEF2F2, #FECACA); }
+    .thumb-found { background: linear-gradient(135deg, #F0FDF4, #BBF7D0); }
+    .thumb-aqua { background: linear-gradient(135deg, var(--aqua-pale), #b3f0f2); }
+    .item-body { padding: 16px 18px 20px; }
+    .item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .item-name { font-weight: 800; font-size: 0.95rem; color: var(--text-dark); margin-bottom: 5px; }
+    .item-desc { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.5; }
+    .item-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+    .item-location { font-size: 0.78rem; color: var(--blue-mid); font-weight: 700; display: flex; align-items: center; gap: 4px; }
+    .item-time { font-size: 0.74rem; color: var(--text-light); }
+    .contact-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: linear-gradient(135deg, var(--aqua), var(--blue-mid)); color: white; border-radius: 99px; font-size: 0.78rem; font-weight: 700; cursor: pointer; border: none; font-family: 'Nunito', sans-serif; transition: transform 0.2s, box-shadow 0.2s; }
+    .contact-btn:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,194,203,0.3); }
+
+    /* PAGINATION */
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 40px; }
+    .page-btn { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.88rem; cursor: pointer; border: 2px solid var(--border); background: white; color: var(--text-muted); transition: all 0.2s; }
+    .page-btn:hover { border-color: var(--aqua); color: var(--blue-mid); }
+    .page-btn.active { background: var(--blue-dark); color: white; border-color: var(--blue-dark); }
+
+    @media(max-width:768px) { .sidebar { width: 64px; } .sidebar-logo span, .sidebar-logo .logo-dot { display:none; } .sidebar-item span:not(.si-icon) { display:none; } .content { padding: 16px; } }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">Find<span>It</span><span class="logo-dot"></span></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Main</div>
+      <a class="sidebar-item" href="dashboard.html"><span class="si-icon">🏠</span><span>Dashboard</span></a>
+      <a class="sidebar-item active" href="browse.html"><span class="si-icon">🔍</span><span>Browse Items</span></a>
+      <a class="sidebar-item" href="report.html"><span class="si-icon">📝</span><span>Report Item</span><span class="sidebar-badge yellow">New</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Community</div>
+      <a class="sidebar-item" href="chat.html"><span class="si-icon">💬</span><span>Messages</span><span class="sidebar-badge">3</span></a>
+      <a class="sidebar-item" href="profile.html"><span class="si-icon">👤</span><span>My Profile</span></a>
+    </div>
+    <div class="sidebar-section">
+      <a class="sidebar-item" href="#"><span class="si-icon">⚙️</span><span>Settings</span></a>
+      <a class="sidebar-item" href="index.html"><span class="si-icon">🚪</span><span>Logout</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" onclick="location.href='profile.html'">
+        <div class="sidebar-av">AS</div>
+        <div><div class="sidebar-uname">Arjun Sharma</div><div class="sidebar-urole">⭐ Top Contributor</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <div class="topbar">
+      <div class="topbar-left"><h2>Browse Items</h2><p>Explore all lost & found reports</p></div>
+      <div class="topbar-right">
+        <div class="search-bar"><span>🔍</span><input type="text" placeholder="Search by item, location…"/></div>
+        <div class="icon-btn">🔔<span class="notif-dot">3</span></div>
+        <div class="sidebar-av" style="width:40px;height:40px;cursor:pointer;" onclick="location.href='profile.html'">AS</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- FILTER BAR -->
+      <div class="filter-bar">
+        <div class="filter-tabs">
+          <button class="filter-tab active-all">All Items</button>
+          <button class="filter-tab" onclick="this.className='filter-tab active-lost'">❌ Lost</button>
+          <button class="filter-tab" onclick="this.className='filter-tab active-found'">✅ Found</button>
+        </div>
+        <div class="filter-sep"></div>
+        <div class="cat-tabs">
+          <button class="cat-tab active">All</button>
+          <button class="cat-tab">📱 Electronics</button>
+          <button class="cat-tab">👜 Bags</button>
+          <button class="cat-tab">🐾 Pets</button>
+          <button class="cat-tab">🔑 Keys</button>
+          <button class="cat-tab">📄 Docs</button>
+          <button class="cat-tab">💍 Jewelry</button>
+        </div>
+        <select class="sort-select">
+          <option>Sort: Most Recent</option>
+          <option>Sort: Nearest First</option>
+          <option>Sort: Most Viewed</option>
+        </select>
+      </div>
+
+      <!-- RESULTS HEADER -->
+      <div class="results-header">
+        <h3>Showing 24 items near Yamuna Nagar</h3>
+        <span class="results-count">Page 1 of 8 · 192 total reports</span>
+      </div>
+
+      <!-- GRID -->
+      <div class="items-grid">
+
+        <div class="item-card" onclick="location.href='chat.html'">
+          <div class="item-thumb thumb-lost">📱</div>
+          <div class="item-body">
+            <div class="item-header"><span class="badge badge-lost">Lost</span><span class="item-time">2 hrs ago</span></div>
+            <div class="item-name">iPhone 15 Pro — Space Black</div>
+            <div class="item-desc">Lost at metro station, has a cracked screen protector. Contains important data.</div>
+            <div class="item-footer">
+              <div class="item-location">📍 Central Metro</div>
+              <button class="contact-btn" onclick="event.stopPropagation();location.href='chat.html'">💬 Contact</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="item-card" onclick="location.href='chat.html'">
+          <div class="item-thumb thumb-found">🔑</div>
+          <div class="item-body">
+            <div class="item-header"><span class="badge badge-found">Found</span><span class="item-time">5 hrs ago</span></div>
+            <div class="item-name">Car Keys — Maruti Swift</div>
+            <div class="item-desc">Found near the market with a small keychain. Silver colored with remote.</div>
+            <div class="item-footer">
+              <div class="item-location">📍 Sector 14 Market</div>
+              <button class="contact-btn" onclick="event.stopPropagation();location.href='chat.html'">💬 Contact</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="item-card">
+          <div class="item-thumb thumb-lost">🎒</div>
+          <div class="item-body">
+            <div class="item-header"><span class="badge badge-lost">Lost</span><span class="item-time">Yesterday</span></div>
+            <div class="item-name">Navy Blue Jansport Backpack</div>
+            <div class="item-desc">Contains laptop, notebooks, and charger. Very important to recover ASAP.</div>
+            <div class="item-footer">
+              <div class="item-location">📍 City University</div>
+              <button class="contact-btn" onclick="location.href='chat.html'">💬 Contact</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="item-card">
+          <div class="item-thumb thumb-found">🐕</div>
+          <div class="item-body">
+            <div class="item-header"><span class="badge badge-found">Found</span><span class="item-time">5 hrs ago</span></div>
+            <div class="item-name">Golden Labrador — No Collar</div>
+            <div class="item-desc">Friendly dog, found near the park. Well-fed, appears to be someone's pet.</div>
+            <div class="item-footer">
+              <div class="item-location">📍 Green Valley Park</div>
+              <button class="contact-btn" onclick="location.href='chat.html'">💬 Contact</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="item-card">
+          <div class="item-thumb thumb-lost">👜</div>
+          <div class="item-body">
+            <div class="item-header"><span class="badge badge-lost">Lost</span><span class="item-time">Yesterday</span></div>
+            <div class="item-name">Black Leather Handbag — Zara</div>
+            <div class="item-desc">Black handbag with gold clasp, pink keychain inside. Contains wallet and docs.</div>
+            <div class="item-footer">
+              <div class="item-location">📍 City Mall, Gate 3</div>
+              <button class="contact-btn" onclick="location.href='chat.html'">💬 Contact</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="item-card">
+          <div class="item-thumb thumb-aqua">👓</div>
+          <div class="item-body">
+            <div class="item-header"><span class="badge badge-found">Found</span><span class="item-time">Today</span></div>
+            <div class="item-name">Ray-Ban Sunglasses — Tortoise</div>
+            <div class="item-desc">Found on a cafe table near MG Road. Classic tortoiseshell frame, in case.</div>
+            <div class="item-footer">
+              <div class="item-location">📍 Café Mocha</div>
+              <button class="contact-btn" onclick="location.href='chat.html'">💬 Contact</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="item-card">
+          <div class="item-thumb thumb-lost" style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);">📔</div>
+          <div class="item-body">
+            <div class="item-header"><span class="badge badge-lost">Lost</span><span class="item-time">2 days ago</span></div>
+            <div class="item-name">Student ID + Aadhar Card</div>
+            <div class="item-desc">Lost important documents including student ID and Aadhar. Very urgent!</div>
+            <div class="item-footer">
+              <div class="item-location">📍 Bus Stand No. 5</div>
+              <button class="contact-btn" onclick="location.href='chat.html'">💬 Contact</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="item-card">
+          <div class="item-thumb thumb-found" style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);">💍</div>
+          <div class="item-body">
+            <div class="item-header"><span class="badge badge-found">Found</span><span class="item-time">3 days ago</span></div>
+            <div class="item-name">Gold Ring with Diamond Setting</div>
+            <div class="item-desc">Found near swimming pool. Small gold ring with a solitaire diamond. Stored safely.</div>
+            <div class="item-footer">
+              <div class="item-location">📍 Sports Complex</div>
+              <button class="contact-btn" onclick="location.href='chat.html'">💬 Contact</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PAGINATION -->
+      <div class="pagination">
+        <div class="page-btn">←</div>
+        <div class="page-btn active">1</div>
+        <div class="page-btn">2</div>
+        <div class="page-btn">3</div>
+        <div class="page-btn">4</div>
+        <div class="page-btn">5</div>
+        <div class="page-btn">→</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.cat-tab').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+  document.querySelectorAll('.filter-tab').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-tab').forEach(b => b.className = 'filter-tab');
+      this.classList.add(this.textContent.includes('Lost') ? 'active-lost' : this.textContent.includes('Found') ? 'active-found' : 'active-all');
+    });
+  });
+</script>
+</body>
+</html>
