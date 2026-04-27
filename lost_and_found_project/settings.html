@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FindIt — Settings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css"/>
+
+  <!-- ── AUTH GUARD ── -->
+  <script>
+  (function(){
+    var token = localStorage.getItem('findit_token');
+    var user  = null;
+    try { user = JSON.parse(localStorage.getItem('findit_user')); } catch(e){}
+    if (!token || !user) {
+      sessionStorage.setItem('findit_redirect', window.location.href);
+      window.location.replace('login.html');
+      return;
+    }
+    window.AUTH = {
+      getToken : function(){ return localStorage.getItem('findit_token'); },
+      getUser  : function(){ try{ return JSON.parse(localStorage.getItem('findit_user')); }catch(e){ return null; } },
+      isLoggedIn: function(){ return !!localStorage.getItem('findit_token'); },
+      logout   : function(){
+        localStorage.removeItem('findit_token');
+        localStorage.removeItem('findit_user');
+        window.location.replace('login.html');
+      },
+      updateUser: function(updated){
+        var current = this.getUser() || {};
+        var merged  = Object.assign({}, current, updated);
+        localStorage.setItem('findit_user', JSON.stringify(merged));
+      }
+    };
+  })();
+  </script>
+
+  <style>
+    /* ── LAYOUT ── */
+    body { background: var(--off-white); }
+    .app-shell { display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── SIDEBAR (same as all pages) ── */
+    .sidebar { width: 250px; flex-shrink: 0; background: white; border-right: 2px solid var(--border); display: flex; flex-direction: column; }
+    .sidebar-logo { padding: 24px 24px 20px; font-family:'Poppins',sans-serif; font-weight:800; font-size:1.5rem; color:var(--blue-dark); border-bottom:2px solid var(--border); display:flex; align-items:center; gap:6px; }
+    .sidebar-logo span { color: var(--aqua); }
+    .sidebar-logo .logo-dot { width:8px; height:8px; border-radius:50%; background:var(--yellow); }
+    .sidebar-section { padding: 20px 14px 8px; }
+    .sidebar-section-label { font-size:0.7rem; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-light); margin-bottom:8px; padding:0 10px; }
+    .sidebar-item { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:12px; cursor:pointer; font-weight:600; font-size:0.9rem; color:var(--text-muted); transition:all 0.2s; margin-bottom:2px; text-decoration:none; }
+    .sidebar-item:hover { background:var(--aqua-pale); color:var(--blue-dark); }
+    .sidebar-item.active { background:linear-gradient(135deg,var(--aqua-pale),#d4f5f6); color:var(--blue-dark); border-left:3px solid var(--aqua); }
+    .sidebar-item .si-icon { font-size:1.1rem; width:22px; text-align:center; }
+    .sidebar-badge { margin-left:auto; background:var(--aqua); color:white; border-radius:99px; padding:1px 8px; font-size:0.7rem; font-weight:800; }
+    .sidebar-badge.yellow { background:var(--yellow); color:var(--blue-dark); }
+    .sidebar-footer { margin-top:auto; padding:16px 18px; border-top:2px solid var(--border); }
+    .sidebar-user { display:flex; align-items:center; gap:12px; cursor:pointer; padding:10px; border-radius:12px; transition:background 0.2s; }
+    .sidebar-user:hover { background:var(--light-gray); }
+    .sidebar-av { width:40px; height:40px; border-radius:50%; flex-shrink:0; background:linear-gradient(135deg,var(--aqua),var(--blue-mid)); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem; color:white; }
+    .sidebar-uname { font-weight:700; font-size:0.88rem; color:var(--text-dark); }
+    .sidebar-urole { font-size:0.75rem; color:var(--text-muted); }
+
+    /* ── MAIN ── */
+    .main-area { flex:1; overflow-y:auto; }
+
+    /* ── TOPBAR ── */
+    .topbar { background:white; border-bottom:2px solid var(--border); padding:0 32px; height:68px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+    .topbar-left h2 { font-size:1.15rem; font-weight:800; color:var(--text-dark); }
+    .topbar-left p  { font-size:0.8rem; color:var(--text-muted); }
+
+    /* ── CONTENT ── */
+    .content { padding: 32px; max-width: 860px; }
+
+    /* ── SETTINGS TABS ── */
+    .settings-tabs {
+      display: flex; gap: 4px;
+      background: white; border: 2px solid var(--border);
+      border-radius: var(--radius-lg); padding: 6px;
+      margin-bottom: 28px; flex-wrap: wrap;
+    }
+    .stab {
+      padding: 9px 20px; border-radius: 10px; cursor: pointer;
+      font-weight: 700; font-size: 0.87rem; color: var(--text-muted);
+      transition: all 0.2s; display: flex; align-items: center; gap: 7px;
+      border: none; background: none; font-family: 'Nunito', sans-serif;
+    }
+    .stab:hover { background: var(--aqua-pale); color: var(--blue-dark); }
+    .stab.active { background: linear-gradient(135deg, var(--aqua), var(--blue-mid)); color: white; }
+
+    /* ── SECTION CARDS ── */
+    .settings-panel { display: none; }
+    .settings-panel.active { display: block; }
+
+    .set-card {
+      background: white; border: 2px solid var(--border);
+      border-radius: var(--radius-lg); margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .set-card-head {
+      padding: 18px 24px; border-bottom: 2px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .set-card-icon {
+      width: 40px; height: 40px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .sci-blue   { background: var(--aqua-pale); }
+    .sci-green  { background: var(--green-light); }
+    .sci-yellow { background: var(--yellow-light); }
+    .sci-red    { background: #FEE2E2; }
+    .set-card-head h3 { font-size: 0.97rem; font-weight: 800; color: var(--text-dark); margin-bottom: 2px; }
+    .set-card-head p  { font-size: 0.8rem; color: var(--text-muted); }
+    .set-card-body { padding: 20px 24px; }
+
+    /* ── FORM ROWS ── */
+    .set-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0; border-bottom: 1px solid var(--border); gap: 16px;
+    }
+    .set-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .set-row:first-child { padding-top: 0; }
+    .set-row-info { flex: 1; }
+    .set-row-label { font-weight: 700; font-size: 0.9rem; color: var(--text-dark); }
+    .set-row-sub   { font-size: 0.8rem; color: var(--text-muted); margin-top: 3px; }
+
+    /* ── TOGGLE SWITCH ── */
+    .toggle-wrap { flex-shrink: 0; }
+    .toggle {
+      position: relative; width: 46px; height: 26px;
+      display: inline-block; cursor: pointer;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--border); border-radius: 99px;
+      transition: background 0.25s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: white; top: 3px; left: 3px;
+      transition: transform 0.25s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+    .toggle input:checked + .toggle-slider { background: var(--aqua); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    /* ── INPUT ── */
+    .set-input {
+      background: var(--off-white); border: 2px solid var(--border);
+      border-radius: 10px; padding: 9px 14px;
+      font-size: 0.9rem; font-family: 'Nunito', sans-serif;
+      color: var(--text-body); outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 220px;
+    }
+    .set-input:focus { border-color: var(--aqua); box-shadow: 0 0 0 3px rgba(0,194,203,0.12); background: white; }
+    .set-input.full { width: 100%; margin-top: 10px; }
+
+    /* ── SELECT ── */
+    .set-select {
+      background: var(--off-white); border: 2px solid var(--border);
+      border-radius: 10px; padding: 9px 14px;
+      font-size: 0.9rem; font-family: 'Nunito', sans-serif;
+      color: var(--text-body); outline: none; cursor: pointer;
+      transition: border-color 0.2s; min-width: 160px;
+    }
+    .set-select:focus { border-color: var(--aqua); }
+
+    /* ── GRID FOR PROFILE FORM ── */
+    .form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-group-s { display: flex; flex-direction: column; gap: 6px; }
+    .form-label-s { font-size: 0.83rem; font-weight: 700; color: var(--text-dark); }
+
+    /* ── DANGER ZONE ── */
+    .danger-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 22px; border-radius: 10px;
+      font-weight: 700; font-size: 0.88rem; cursor: pointer;
+      font-family: 'Nunito', sans-serif; transition: all 0.2s;
+      border: 2px solid; margin-right: 10px; margin-top: 6px;
+    }
+    .danger-btn.outline { background: white; color: #DC2626; border-color: #FECACA; }
+    .danger-btn.outline:hover { background: #FEF2F2; border-color: #EF4444; }
+    .danger-btn.filled { background: #DC2626; color: white; border-color: #DC2626; }
+    .danger-btn.filled:hover { background: #B91C1C; transform: translateY(-1px); }
+
+    /* ── SAVE BUTTON ── */
+    .save-btn {
+      background: linear-gradient(135deg, var(--aqua), var(--blue-mid));
+      color: white; border: none; border-radius: 11px;
+      padding: 11px 28px; font-weight: 700; font-size: 0.92rem;
+      cursor: pointer; font-family: 'Nunito', sans-serif;
+      transition: transform 0.2s, box-shadow 0.2s; margin-top: 6px;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,194,203,0.35); }
+
+    /* ── AVATAR UPLOAD ── */
+    .avatar-section { display: flex; align-items: center; gap: 24px; margin-bottom: 24px; }
+    .avatar-big {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--aqua), var(--blue-mid));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 800; color: white;
+      flex-shrink: 0; border: 3px solid var(--border);
+    }
+    .avatar-actions { display: flex; flex-direction: column; gap: 8px; }
+    .upload-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 18px; border-radius: 10px;
+      font-weight: 700; font-size: 0.84rem; cursor: pointer;
+      font-family: 'Nunito', sans-serif; border: 2px solid var(--border);
+      background: white; color: var(--text-dark); transition: border-color 0.2s;
+    }
+    .upload-btn:hover { border-color: var(--aqua); color: var(--blue-mid); }
+    .avatar-hint { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* ── TOAST ── */
+    .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast-msg {
+      background: white; border-radius: 12px; padding: 13px 18px;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 12px 40px rgba(11,47,107,0.18);
+      font-weight: 700; font-size: 0.88rem; color: var(--text-dark);
+      border-left: 4px solid var(--green);
+      animation: toastIn 0.35s ease both;
+      min-width: 240px;
+    }
+    .toast-msg.error { border-color: #EF4444; }
+    @keyframes toastIn { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
+
+    /* ── MODAL ── */
+    .modal-bg {
+      position: fixed; inset: 0; background: rgba(11,47,107,0.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .modal-bg.show { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: white; border-radius: 20px; padding: 36px;
+      max-width: 420px; width: 90%;
+      transform: scale(0.92); transition: transform 0.25s;
+      text-align: center;
+    }
+    .modal-bg.show .modal-box { transform: scale(1); }
+    .modal-icon { font-size: 3rem; margin-bottom: 14px; }
+    .modal-box h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 10px; }
+    .modal-box p  { font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; }
+    .modal-btns   { display: flex; gap: 12px; justify-content: center; }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:768px){
+      .sidebar { width: 64px; }
+      .sidebar-logo span, .sidebar-logo .logo-dot { display: none; }
+      .sidebar-item span:not(.si-icon) { display: none; }
+      .sidebar-uname, .sidebar-urole { display: none; }
+      .content { padding: 20px; }
+      .form-2col { grid-template-columns: 1fr; }
+      .set-input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">Find<span>It</span><span class="logo-dot"></span></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Main</div>
+      <a class="sidebar-item" href="dashboard.html"><span class="si-icon">🏠</span><span>Dashboard</span></a>
+      <a class="sidebar-item" href="browse.html"><span class="si-icon">🔍</span><span>Browse Items</span></a>
+      <a class="sidebar-item" href="report.html"><span class="si-icon">📝</span><span>Report Item</span><span class="sidebar-badge yellow">New</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Community</div>
+      <a class="sidebar-item" href="chat.html"><span class="si-icon">💬</span><span>Messages</span><span class="sidebar-badge">3</span></a>
+      <a class="sidebar-item" href="profile.html"><span class="si-icon">👤</span><span>My Profile</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Account</div>
+      <a class="sidebar-item active" href="settings.html"><span class="si-icon">⚙️</span><span>Settings</span></a>
+      <a class="sidebar-item" href="#" onclick="AUTH.logout();return false;"><span class="si-icon">🚪</span><span>Logout</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" onclick="location.href='profile.html'">
+        <div class="sidebar-av js-init">AS</div>
+        <div>
+          <div class="sidebar-uname js-name">Arjun Sharma</div>
+          <div class="sidebar-urole">⭐ Top Contributor</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <div class="main-area">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>⚙️ Settings</h2>
+        <p>Manage your account preferences</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="sidebar-av js-init" style="width:40px;height:40px;cursor:pointer;" onclick="location.href='profile.html'">AS</div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ── TABS ── -->
+      <div class="settings-tabs">
+        <button class="stab active" onclick="showTab('profile',this)">👤 Profile</button>
+        <button class="stab" onclick="showTab('account',this)">🔐 Account & Password</button>
+        <button class="stab" onclick="showTab('notif',this)">🔔 Notifications</button>
+        <button class="stab" onclick="showTab('privacy',this)">🛡️ Privacy</button>
+        <button class="stab" onclick="showTab('appear',this)">🎨 Appearance</button>
+        <button class="stab" onclick="showTab('danger',this)">⚠️ Danger Zone</button>
+      </div>
+
+      <!-- ══════════════════════════════
+           TAB 1 — PROFILE SETTINGS
+      ══════════════════════════════ -->
+      <div class="settings-panel active" id="panel-profile">
+
+        <!-- Avatar -->
+        <div class="set-card">
+          <div class="set-card-head">
+            <div class="set-card-icon sci-blue">🖼️</div>
+            <div><h3>Profile Photo</h3><p>Update your display picture</p></div>
+          </div>
+          <div class="set-card-body">
+            <div class="avatar-section">
+              <div class="avatar-big js-init">AS</div>
+              <div class="avatar-actions">
+                <button class="upload-btn" onclick="showToast('📸 Photo upload requires backend connection!','info')">📤 Upload New Photo</button>
+                <button class="upload-btn" onclick="showToast('🗑️ Photo removed!','success')" style="color:#DC2626;border-color:#FECACA;">🗑️ Remove Photo</button>
+                <span class="avatar-hint">JPG or PNG, max 5MB</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Personal Info -->
+        <div class="set-card">
+          <div class="set-card-head">
+            <div class="set-card-icon sci-blue">👤</div>
+            <div><h3>Personal Information</h3><p>Update your name, phone, and city</p></div>
+          </div>
+          <div class="set-card-body">
+            <div class="form-2col">
+              <div class="form-group-s">
+                <label class="form-label-s">First Name</label>
+                <input class="set-input full" id="firstName" type="text" placeholder="First name"/>
+              </div>
+              <div class="form-group-s">
+                <label class="form-label-s">Last Name</label>
+                <input class="set-input full" id="lastName" type="text" placeholder="Last name"/>
+              </div>
+            </div>
+            <div class="form-2col">
+              <div class="form-group-s">
+                <label class="form-label-s">Phone Number</label>
+                <input class="set-input full" id="phone" type="tel" placeholder="+91 98765 43210"/>
+              </div>
+              <div class="form-group-s">
+                <label class="form-label-s">City</label>
+                <input class="set-input full" id="city" type="text" placeholder="e.g. Yamuna Nagar"/>
+              </div>
+            </div>
+            <div class="form-group-s" style="margin-bottom:16px;">
+              <label class="form-label-s">Bio <span style="color:var(--text-light);font-weight:400;">(optional)</span></label>
+              <textarea class="set-input full" id="bio" rows="3" placeholder="Tell the community a little about yourself..." style="resize:vertical;"></textarea>
+            </div>
+            <button class="save-btn" onclick="saveProfile()">💾 Save Changes</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════
+           TAB 2 — ACCOUNT & PASSWORD
+      ══════════════════════════════ -->
+      <div class="settings-panel" id="panel-account">
+
+        <!-- Email -->
+        <div class="set-card">
+          <div class="set-card-head">
+            <div class="set-card-icon sci-blue">📧</div>
+            <div><h3>Email Address</h3><p>Your login email</p></div>
+          </div>
+          <div class="set-card-body">
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Current Email</div>
+                <div class="set-row-sub js-email">arjun@gmail.com</div>
+              </div>
+              <button class="upload-btn" onclick="showToast('📧 Email change requires backend!','info')">Change Email</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="set-card">
+          <div class="set-card-head">
+            <div class="set-card-icon sci-yellow">🔒</div>
+            <div><h3>Change Password</h3><p>Keep your account secure</p></div>
+          </div>
+          <div class="set-card-body">
+            <div class="form-group-s" style="margin-bottom:14px;">
+              <label class="form-label-s">Current Password</label>
+              <input class="set-input full" id="currPass" type="password" placeholder="Enter current password"/>
+            </div>
+            <div class="form-2col">
+              <div class="form-group-s">
+                <label class="form-label-s">New Password</label>
+                <input class="set-input full" id="newPass" type="password" placeholder="Min. 8 characters"/>
+              </div>
+              <div class="form-group-s">
+                <label class="form-label-s">Confirm New Password</label>
+                <input class="set-input full" id="confirmPass" type="password" placeholder="Repeat new password"/>
+              </div>
+            </div>
+            <div id="passMsg" style="font-size:0.82rem;margin-bottom:12px;display:none;"></div>
+            <button class="save-btn" onclick="changePassword()">🔐 Update Password</button>
+          </div>
+        </div>
+
+        <!-- Sessions -->
+        <div class="set-card">
+          <div class="set-card-head">
+            <div class="set-card-icon sci-green">📱</div>
+            <div><h3>Active Sessions</h3><p>Devices where you are logged in</p></div>
+          </div>
+          <div class="set-card-body">
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">🖥️ This Device (Chrome · Windows)</div>
+                <div class="set-row-sub">Current session · Yamuna Nagar, IN</div>
+              </div>
+              <span style="font-size:0.75rem;background:var(--green-light);color:var(--green-dark);padding:3px 10px;border-radius:99px;font-weight:700;">Active</span>
+            </div>
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">📱 Mobile (Chrome · Android)</div>
+                <div class="set-row-sub">2 days ago · Yamuna Nagar, IN</div>
+              </div>
+              <button class="upload-btn" style="color:#DC2626;border-color:#FECACA;" onclick="showToast('📱 Session ended!','success')">Log out</button>
+            </div>
+            <div style="margin-top:14px;">
+              <button class="danger-btn outline" onclick="showModal('logoutAll')">🚪 Log Out All Other Devices</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════
+           TAB 3 — NOTIFICATIONS
+      ══════════════════════════════ -->
+      <div class="settings-panel" id="panel-notif">
+
+        <div class="set-card">
+          <div class="set-card-head">
+            <div class="set-card-icon sci-blue">📩</div>
+            <div><h3>Email Notifications</h3><p>What we send to your inbox</p></div>
+          </div>
+          <div class="set-card-body">
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Item Match Found</div>
+                <div class="set-row-sub">When a found item matches your lost report</div>
+              </div>
+              <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked onchange="toggleSave(this,'email_match')"><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">New Message Received</div>
+                <div class="set-row-sub">When someone sends you a chat message</div>
+              </div>
+              <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked onchange="toggleSave(this,'email_msg')"><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Item Status Update</div>
+                <div class="set-row-sub">When your report status changes</div>
+              </div>
+              <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked onchange="toggleSave(this,'email_status')"><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Weekly Summary</div>
+                <div class="set-row-sub">Weekly digest of nearby item reports</div>
+              </div>
+              <div class="toggle-wrap"><label class="toggle"><input type="checkbox" onchange="toggleSave(this,'email_weekly')"><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Tips & Platform Updates</div>
+                <div class="set-row-sub">Helpful tips and new feature announcements</div>
+              </div>
+              <div class="toggle-wrap"><label class="toggle"><input type="checkbox" onchange="toggleSave(this,'email_tips')"><span class="toggle-slider"></span></label></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="set-card">
+          <div class="set-card-head">
+            <div class="set-card-icon sci-green">🔔</div>
+            <div><h3>Push Notifications</h3><p>Browser & app alerts</p></div>
+          </div>
+          <div class="set-card-body">
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Enable Push Notifications</div>
+                <div class="set-row-sub">Allow browser notifications from FindIt</div>
+              </div>
+              <div class="toggle-wrap"><label class="toggle"><input type="checkbox" onchange="requestNotifPerm(this)"><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Chat Message Alert</div>
+                <div class="set-row-sub">Instant ping when you get a new message</div>
+              </div>
+              <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked onchange="toggleSave(this,'push_chat')"><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Nearby Item Alert</div>
+                <div class="set-row-sub">When a new item is reported near you</div>
+              </div>
+              <div class="toggle-wrap"><label class="toggle"><input type="checkbox" onchange="toggleSave(this,'push_nearby')"><span class="toggle-slider"></span></label></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════
+           TAB 4 — PRIVACY
+      ══════════════════════════════ -->
+      <div class="settings-panel" id="panel-privacy">
+
+        <div class="set-card">
+          <div class="set-card-head">
+            <div class="set-card-icon sci-blue">👁️</div>
+            <div><h3>Profile Visibility</h3><p>Who can see your information</p></div>
+          </div>
+          <div class="set-card-body">
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Show Profile to Public</div>
+                <div class="set-row-sub">Anyone can view your profile and reports</div>
+              </div>
+              <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked onchange="toggleSave(this,'pub_profile')"><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Show Phone Number</div>
+                <div class="set-row-sub">Display your phone on item reports</div>
+              </div>
+              <div class="toggle-wrap"><label class="toggle"><input type="checkbox" onchange="toggleSave(this,'show_phone')"><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Show City</div>
+                <div class="set-row-sub">Display your city on your public profile</div>
+              </div>
+              <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked onchange="toggleSave(this,'show_city')"><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Allow Direct Messages</div>
+                <div class="set-row-sub">Let other users send you chat messages</div>
+              </div>
+              <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked onchange="toggleSave(this,'allow_dm')"><span class="toggle-slider"></span></label></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="set-card">
+          <div class="set-card-head">
+            <div class="set-card-icon sci-yellow">📍</div>
+            <div><h3>Location Privacy</h3><p>Control how your location is used</p></div>
+          </div>
+          <div class="set-card-body">
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Location on Reports</div>
+                <div class="set-row-sub">Show exact location on your item reports</div>
+              </div>
+              <select class="set-select" onchange="showToast('📍 Location setting saved!','success')">
+                <option>Show exact location</option>
+                <option>Show area only (1 km)</option>
+                <option>Hide location</option>
+              </select>
+            </div>
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Nearby Alerts Radius</div>
+                <div class="set-row-sub">Get alerts for items reported within</div>
+              </div>
+              <select class="set-select" onchange="showToast('📍 Radius updated!','success')">
+                <option>5 km</option>
+                <option selected>10 km</option>
+                <option>25 km</option>
+                <option>50 km</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════
+           TAB 5 — APPEARANCE
+      ══════════════════════════════ -->
+      <div class="settings-panel" id="panel-appear">
+
+        <div class="set-card">
+          <div class="set-card-head">
+            <div class="set-card-icon sci-blue">🎨</div>
+            <div><h3>Theme</h3><p>Choose your preferred look</p></div>
+          </div>
+          <div class="set-card-body">
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Color Theme</div>
+                <div class="set-row-sub">App color scheme</div>
+              </div>
+              <select class="set-select" id="themeSelect" onchange="applyTheme(this.value)">
+                <option value="light" selected>☀️ Light Mode</option>
+                <option value="dark">🌙 Dark Mode</option>
+                <option value="system">💻 System Default</option>
+              </select>
+            </div>
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Language</div>
+                <div class="set-row-sub">Display language for the app</div>
+              </div>
+              <select class="set-select" onchange="showToast('🌐 Language updated!','success')">
+                <option>English</option>
+                <option>हिंदी (Hindi)</option>
+                <option>ਪੰਜਾਬੀ (Punjabi)</option>
+              </select>
+            </div>
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Compact Mode</div>
+                <div class="set-row-sub">Show more content with smaller spacing</div>
+              </div>
+              <div class="toggle-wrap"><label class="toggle"><input type="checkbox" onchange="toggleSave(this,'compact')"><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Animations</div>
+                <div class="set-row-sub">Enable smooth transitions and animations</div>
+              </div>
+              <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked onchange="toggleSave(this,'animations')"><span class="toggle-slider"></span></label></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accent color picker -->
+        <div class="set-card">
+          <div class="set-card-head">
+            <div class="set-card-icon sci-green">🖌️</div>
+            <div><h3>Accent Color</h3><p>Personalize your FindIt experience</p></div>
+          </div>
+          <div class="set-card-body">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+              <div class="color-swatch active" data-color="#00C2CB" style="width:36px;height:36px;border-radius:50%;background:#00C2CB;cursor:pointer;border:3px solid var(--blue-dark);transition:transform 0.2s;" onclick="pickColor(this,'#00C2CB')" title="Aqua (Default)"></div>
+              <div class="color-swatch" data-color="#1A56B0" style="width:36px;height:36px;border-radius:50%;background:#1A56B0;cursor:pointer;border:3px solid transparent;transition:transform 0.2s;" onclick="pickColor(this,'#1A56B0')" title="Blue"></div>
+              <div class="color-swatch" data-color="#22C55E" style="width:36px;height:36px;border-radius:50%;background:#22C55E;cursor:pointer;border:3px solid transparent;transition:transform 0.2s;" onclick="pickColor(this,'#22C55E')" title="Green"></div>
+              <div class="color-swatch" data-color="#8B5CF6" style="width:36px;height:36px;border-radius:50%;background:#8B5CF6;cursor:pointer;border:3px solid transparent;transition:transform 0.2s;" onclick="pickColor(this,'#8B5CF6')" title="Purple"></div>
+              <div class="color-swatch" data-color="#F59E0B" style="width:36px;height:36px;border-radius:50%;background:#F59E0B;cursor:pointer;border:3px solid transparent;transition:transform 0.2s;" onclick="pickColor(this,'#F59E0B')" title="Amber"></div>
+              <div class="color-swatch" data-color="#EF4444" style="width:36px;height:36px;border-radius:50%;background:#EF4444;cursor:pointer;border:3px solid transparent;transition:transform 0.2s;" onclick="pickColor(this,'#EF4444')" title="Red"></div>
+              <div class="color-swatch" data-color="#EC4899" style="width:36px;height:36px;border-radius:50%;background:#EC4899;cursor:pointer;border:3px solid transparent;transition:transform 0.2s;" onclick="pickColor(this,'#EC4899')" title="Pink"></div>
+            </div>
+            <p style="font-size:0.78rem;color:var(--text-muted);margin-top:12px;">Selected color will be applied to buttons and highlights across the app.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════
+           TAB 6 — DANGER ZONE
+      ══════════════════════════════ -->
+      <div class="settings-panel" id="panel-danger">
+
+        <div class="set-card">
+          <div class="set-card-head">
+            <div class="set-card-icon sci-yellow">📦</div>
+            <div><h3>Export My Data</h3><p>Download a copy of your FindIt data</p></div>
+          </div>
+          <div class="set-card-body">
+            <div class="set-row">
+              <div class="set-row-info">
+                <div class="set-row-label">Download All Data</div>
+                <div class="set-row-sub">Includes your profile, reports, messages, and activity</div>
+              </div>
+              <button class="upload-btn" onclick="showToast('📦 Data export started! You will get an email shortly.','success')">📥 Export</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="set-card">
+          <div class="set-card-head">
+            <div class="set-card-icon sci-yellow">⏸️</div>
+            <div><h3>Deactivate Account</h3><p>Temporarily hide your profile and reports</p></div>
+          </div>
+          <div class="set-card-body">
+            <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6;">
+              Deactivating hides your profile and all your reports from other users. You can reactivate anytime by logging back in.
+            </p>
+            <button class="danger-btn outline" onclick="showModal('deactivate')">⏸️ Deactivate My Account</button>
+          </div>
+        </div>
+
+        <div class="set-card" style="border-color:#FECACA;">
+          <div class="set-card-head" style="background:#FEF2F2;">
+            <div class="set-card-icon sci-red">🗑️</div>
+            <div>
+              <h3 style="color:#DC2626;">Delete Account</h3>
+              <p style="color:#EF4444;">This action is permanent and cannot be undone</p>
+            </div>
+          </div>
+          <div class="set-card-body">
+            <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6;">
+              Deleting your account will permanently remove your profile, all item reports, messages, and all data associated with your account. <strong style="color:#DC2626;">This cannot be reversed.</strong>
+            </p>
+            <button class="danger-btn filled" onclick="showModal('delete')">🗑️ Permanently Delete Account</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main-area -->
+</div><!-- /app-shell -->
+
+<!-- ══ TOAST CONTAINER ══ -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ══ CONFIRM MODALS ══ -->
+<div class="modal-bg" id="modal-logoutAll">
+  <div class="modal-box">
+    <div class="modal-icon">🚪</div>
+    <h3>Log Out All Devices?</h3>
+    <p>All other sessions will be ended. You will stay logged in on this device.</p>
+    <div class="modal-btns">
+      <button class="upload-btn" onclick="closeModal('logoutAll')">Cancel</button>
+      <button class="save-btn" style="margin-top:0;" onclick="closeModal('logoutAll');showToast('✅ All other sessions ended!','success')">Yes, Log Out</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-deactivate">
+  <div class="modal-box">
+    <div class="modal-icon">⏸️</div>
+    <h3>Deactivate Account?</h3>
+    <p>Your profile and reports will be hidden. You can come back anytime by simply logging in again.</p>
+    <div class="modal-btns">
+      <button class="upload-btn" onclick="closeModal('deactivate')">Cancel</button>
+      <button class="danger-btn outline" style="margin:0;" onclick="closeModal('deactivate');showToast('⏸️ Account deactivated. Log in anytime to restore.','info')">Deactivate</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-delete">
+  <div class="modal-box">
+    <div class="modal-icon">🗑️</div>
+    <h3>Delete Account Permanently?</h3>
+    <p>All your data will be permanently deleted. <strong>This cannot be undone.</strong> Are you absolutely sure?</p>
+    <div class="modal-btns">
+      <button class="upload-btn" onclick="closeModal('delete')">No, Keep My Account</button>
+      <button class="danger-btn filled" style="margin:0;" onclick="deleteAccount()">Yes, Delete Forever</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══ POPULATE USER INFO ══ */
+document.addEventListener('DOMContentLoaded', function() {
+  var user = AUTH.getUser();
+  if (!user) return;
+
+  var full = (user.firstName || '') + ' ' + (user.lastName || '');
+  var init = ((user.firstName||'U')[0] + (user.lastName||'U')[0]).toUpperCase();
+
+  document.querySelectorAll('.js-name').forEach(function(e){ e.textContent = full; });
+  document.querySelectorAll('.js-init').forEach(function(e){ e.textContent = init; });
+  document.querySelectorAll('.js-email').forEach(function(e){ e.textContent = user.email || ''; });
+
+  /* Pre-fill profile form */
+  if (document.getElementById('firstName')) document.getElementById('firstName').value = user.firstName || '';
+  if (document.getElementById('lastName'))  document.getElementById('lastName').value  = user.lastName  || '';
+  if (document.getElementById('phone'))     document.getElementById('phone').value     = user.phone     || '';
+  if (document.getElementById('city'))      document.getElementById('city').value      = user.city      || '';
+
+  /* Load saved prefs */
+  loadPrefs();
+});
+
+/* ══ TAB SWITCHER ══ */
+function showTab(name, btn) {
+  document.querySelectorAll('.settings-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.stab').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ══ SAVE PROFILE ══ */
+function saveProfile() {
+  var updated = {
+    firstName: document.getElementById('firstName').value.trim(),
+    lastName:  document.getElementById('lastName').value.trim(),
+    phone:     document.getElementById('phone').value.trim(),
+    city:      document.getElementById('city').value.trim()
+  };
+
+  if (!updated.firstName || !updated.lastName) {
+    showToast('❗ Name cannot be empty!', 'error'); return;
+  }
+
+  /* Update localStorage */
+  AUTH.updateUser(updated);
+
+  /* Update sidebar display */
+  document.querySelectorAll('.js-name').forEach(function(e){ e.textContent = updated.firstName + ' ' + updated.lastName; });
+  document.querySelectorAll('.js-init').forEach(function(e){ e.textContent = (updated.firstName[0] + updated.lastName[0]).toUpperCase(); });
+
+  showToast('✅ Profile saved successfully!', 'success');
+}
+
+/* ══ CHANGE PASSWORD ══ */
+function changePassword() {
+  var curr    = document.getElementById('currPass').value;
+  var newP    = document.getElementById('newPass').value;
+  var confirm = document.getElementById('confirmPass').value;
+  var msg     = document.getElementById('passMsg');
+
+  msg.style.display = 'none';
+
+  if (!curr || !newP || !confirm) {
+    msg.style.display = 'block';
+    msg.style.color   = '#DC2626';
+    msg.textContent   = '❗ Please fill in all password fields.';
+    return;
+  }
+  if (newP.length < 8) {
+    msg.style.display = 'block';
+    msg.style.color   = '#DC2626';
+    msg.textContent   = '❗ New password must be at least 8 characters.';
+    return;
+  }
+  if (newP !== confirm) {
+    msg.style.display = 'block';
+    msg.style.color   = '#DC2626';
+    msg.textContent   = '❗ New passwords do not match.';
+    return;
+  }
+
+  /* In real app → call /api/auth/changePassword */
+  document.getElementById('currPass').value    = '';
+  document.getElementById('newPass').value     = '';
+  document.getElementById('confirmPass').value = '';
+  showToast('🔐 Password updated successfully!', 'success');
+}
+
+/* ══ TOGGLE + AUTO SAVE ══ */
+function toggleSave(checkbox, key) {
+  var prefs = JSON.parse(localStorage.getItem('findit_prefs') || '{}');
+  prefs[key] = checkbox.checked;
+  localStorage.setItem('findit_prefs', JSON.stringify(prefs));
+  showToast(checkbox.checked ? '✅ Setting enabled!' : '🔕 Setting disabled!', 'success');
+}
+
+function loadPrefs() {
+  var prefs = JSON.parse(localStorage.getItem('findit_prefs') || '{}');
+  document.querySelectorAll('input[type="checkbox"][onchange]').forEach(function(cb) {
+    var match = cb.getAttribute('onchange').match(/'([^']+)'\)/);
+    if (match && prefs.hasOwnProperty(match[1])) {
+      cb.checked = prefs[match[1]];
+    }
+  });
+}
+
+/* ══ NOTIFICATION PERMISSION ══ */
+function requestNotifPerm(checkbox) {
+  if (checkbox.checked) {
+    if ('Notification' in window) {
+      Notification.requestPermission().then(function(perm) {
+        if (perm === 'granted') {
+          showToast('🔔 Push notifications enabled!', 'success');
+        } else {
+          checkbox.checked = false;
+          showToast('❌ Notification permission denied by browser.', 'error');
+        }
+      });
+    } else {
+      checkbox.checked = false;
+      showToast('❌ Your browser does not support notifications.', 'error');
+    }
+  } else {
+    showToast('🔕 Push notifications disabled.', 'success');
+  }
+}
+
+/* ══ ACCENT COLOR ══ */
+function pickColor(el, color) {
+  document.querySelectorAll('.color-swatch').forEach(function(s){
+    s.style.border = '3px solid transparent';
+    s.style.transform = 'scale(1)';
+  });
+  el.style.border = '3px solid var(--blue-dark)';
+  el.style.transform = 'scale(1.15)';
+  document.documentElement.style.setProperty('--aqua', color);
+  localStorage.setItem('findit_accent', color);
+  showToast('🎨 Accent color updated!', 'success');
+}
+
+/* Load saved accent */
+(function(){
+  var saved = localStorage.getItem('findit_accent');
+  if (saved) {
+    document.documentElement.style.setProperty('--aqua', saved);
+    setTimeout(function(){
+      document.querySelectorAll('.color-swatch').forEach(function(s){
+        if (s.dataset.color === saved) {
+          s.style.border = '3px solid var(--blue-dark)';
+          s.style.transform = 'scale(1.15)';
+        }
+      });
+    }, 100);
+  }
+})();
+
+/* ══ THEME ══ */
+function applyTheme(val) {
+  localStorage.setItem('findit_theme', val);
+  showToast('🎨 Theme preference saved! (Full dark mode coming soon)', 'info');
+}
+
+/* ══ MODALS ══ */
+function showModal(name) {
+  document.getElementById('modal-' + name).classList.add('show');
+}
+function closeModal(name) {
+  document.getElementById('modal-' + name).classList.remove('show');
+}
+
+/* Close modal on background click */
+document.querySelectorAll('.modal-bg').forEach(function(bg){
+  bg.addEventListener('click', function(e){
+    if (e.target === bg) bg.classList.remove('show');
+  });
+});
+
+/* ══ DELETE ACCOUNT ══ */
+function deleteAccount() {
+  closeModal('delete');
+  AUTH.clear ? AUTH.clear() : (localStorage.removeItem('findit_token'), localStorage.removeItem('findit_user'));
+  localStorage.removeItem('findit_prefs');
+  localStorage.removeItem('findit_accent');
+  showToast('🗑️ Account deleted. Redirecting...', 'error');
+  setTimeout(function(){ window.location.replace('index.html'); }, 2000);
+}
+
+/* ══ TOAST ══ */
+var toastTimer;
+function showToast(msg, type) {
+  var wrap  = document.getElementById('toastWrap');
+  var toast = document.createElement('div');
+  toast.className = 'toast-msg' + (type === 'error' ? ' error' : '');
+  toast.innerHTML = '<span>' + msg + '</span>';
+  wrap.appendChild(toast);
+  setTimeout(function(){
+    toast.style.animation = 'toastIn 0.3s ease reverse both';
+    setTimeout(function(){ toast.remove(); }, 300);
+  }, 3000);
+}
+
+/* ══ AUTH.clear helper ══ */
+AUTH.clear = function() {
+  localStorage.removeItem('findit_token');
+  localStorage.removeItem('findit_user');
+};
+</script>
+</body>
+</html>
