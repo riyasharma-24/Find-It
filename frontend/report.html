@@ -102,6 +102,46 @@
     .modal p { color: var(--text-muted); line-height: 1.6; margin-bottom: 28px; }
     .modal-btns { display: flex; gap: 12px; justify-content: center; }
 
+    .input-modern {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: white;
+  transition: 0.2s;
+}
+
+.input-modern span {
+  font-size: 1.1rem;
+}
+
+.input-modern input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 0.9rem;
+  background: transparent;
+}
+
+.input-modern:focus-within {
+  border-color: var(--aqua);
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.15);
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  color: white;
+  font-size: 1.2rem;
+}
+
     @media(max-width:768px){ .sidebar{width:64px} .sidebar-logo span,.sidebar-logo .logo-dot{display:none} .sidebar-item span:not(.si-icon){display:none} .form-row{grid-template-columns:1fr} .type-selector{grid-template-columns:1fr} .content{padding:20px} }
   </style>
 </head>
@@ -118,17 +158,20 @@
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-label">Community</div>
-      <a class="sidebar-item" href="chat.html"><span class="si-icon">💬</span><span>Messages</span><span class="sidebar-badge">3</span></a>
+      <a class="sidebar-item" href="chat.html"><span class="si-icon">💬</span><span>Messages</span></a>
       <a class="sidebar-item" href="profile.html"><span class="si-icon">👤</span><span>My Profile</span></a>
     </div>
     <div class="sidebar-section">
-      <a class="sidebar-item" href="#"><span class="si-icon">⚙️</span><span>Settings</span></a>
+      <!-- <a class="sidebar-item" href="#"><span class="si-icon">⚙️</span><span>Settings</span></a> -->
       <a class="sidebar-item" href="index.html"><span class="si-icon">🚪</span><span>Logout</span></a>
     </div>
     <div class="sidebar-footer">
       <div class="sidebar-user" onclick="location.href='profile.html'">
-        <div class="sidebar-av">AS</div>
-        <div><div class="sidebar-uname">Arjun Sharma</div><div class="sidebar-urole">⭐ Top Contributor</div></div>
+        <div class="sidebar-av js-init"></div>
+<div>
+  <div class="sidebar-uname js-name"></div>
+  <div class="sidebar-urole">⭐ Top Contributor</div>
+</div>
       </div>
     </div>
   </aside>
@@ -171,109 +214,122 @@
         <div class="form-row" style="margin-bottom:18px;">
           <div class="form-group" style="margin:0;">
             <label class="form-label">Item Name *</label>
-            <input class="form-control" type="text" placeholder="e.g. iPhone 15 Pro, Black Wallet…"/>
+            <input id="title" class="form-control" type="text" placeholder="e.g. iPhone 15 Pro, Black Wallet…"/>
           </div>
           <div class="form-group" style="margin:0;">
             <label class="form-label">Category *</label>
-            <select class="form-control">
+            <select id="category" class="form-control">
               <option value="">Select a category…</option>
-              <option>📱 Electronics</option>
-              <option>👜 Bags & Wallets</option>
-              <option>📄 Documents & Cards</option>
-              <option>🐾 Pets</option>
-              <option>🔑 Keys</option>
-              <option>👗 Clothing</option>
-              <option>💍 Jewelry</option>
-              <option>📚 Books & Stationery</option>
-              <option>🎵 Musical Instruments</option>
-              <option>🎸 Other</option>
+              <option value="Electronics">📱 Electronics</option>
+              <option value="Bags">👜 Bags & Wallets</option>
+              <option value="Documents">📄 Documents & Cards</option>
+              <option value="Pets">🐾 Pets</option>
+              <option value="Keys">🔑 Keys</option>
+              <option value="Clothing">👗 Clothing</option>
+              <option value="Jewelry">💍 Jewelry</option>
+              <option value="Books">📚 Books & Stationery</option>
+              <option value="Instruments">🎵 Musical Instruments</option>
+              <option value="Other">🎸 Other</option>
             </select>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Detailed Description *</label>
-          <textarea class="form-control" rows="4" placeholder="Describe the item — color, brand, model, unique features, what was inside, any identifying marks…" style="resize:vertical;"></textarea>
+          <textarea id="description" class="form-control" rows="4" placeholder="Describe the item — color, brand, model, unique features, what was inside, any identifying marks…" style="resize:vertical;"></textarea>
         </div>
         <div class="form-row">
           <div class="form-group" style="margin:0;">
             <label class="form-label">Brand / Make</label>
-            <input class="form-control" type="text" placeholder="e.g. Apple, Samsung, Zara…"/>
+            <input id="brand" class="form-control" type="text" placeholder="e.g. Apple, Samsung, Zara…"/>
           </div>
           <div class="form-group" style="margin:0;">
             <label class="form-label">Color</label>
-            <input class="form-control" type="text" placeholder="e.g. Black, Navy Blue…"/>
+            <input id="color" class="form-control" type="text" placeholder="e.g. Black, Navy Blue…"/>
           </div>
         </div>
       </div>
 
       <div class="form-card" style="margin-bottom:22px;">
-        <div class="form-card-title">📍 Location & Time</div>
-        <div class="form-row" style="margin-bottom:18px;">
-          <div class="form-group" style="margin:0;">
-            <label class="form-label">Location *</label>
-            <input class="form-control" type="text" placeholder="Where was it lost / found?"/>
-          </div>
-          <div class="form-group" style="margin:0;">
-            <label class="form-label">Area / Landmark</label>
-            <input class="form-control" type="text" placeholder="e.g. Near Gate 3, Platform 2…"/>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group" style="margin:0;">
-            <label class="form-label">Date *</label>
-            <input class="form-control" type="date" id="dateField"/>
-          </div>
-          <div class="form-group" style="margin:0;">
-            <label class="form-label">Approximate Time</label>
-            <input class="form-control" type="time"/>
-          </div>
-        </div>
-      </div>
+  <div class="form-card-title">📍 Location & Time</div>
+
+  <div class="form-row" style="margin-bottom:18px;">
+    <div class="form-group" style="margin:0;">
+      <label class="form-label">Location *</label>
+      <input id="location" class="form-control" type="text"
+        placeholder="Where was it lost / found?"/>
+    </div>
+
+    <div class="form-group" style="margin:0;">
+      <label class="form-label">Area / Landmark</label>
+      <input id="landmark" class="form-control" type="text"
+        placeholder="e.g. Near Gate 3, Platform 2…"/>
+    </div>
+  </div>
+
+  <div class="form-row">
+
+  <div class="form-group">
+    <label class="form-label">Date *</label>
+    <div class="input-modern">
+      <span>📅</span>
+      <input id="dateField" type="date"/>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Approximate Time</label>
+    <div class="input-modern">
+      <span>⏰</span>
+      <input id="time" type="time"/>
+    </div>
+  </div>
+
+</div>
 
       <!-- STEP 3: PHOTOS & CONTACT -->
       <div style="margin-bottom:16px; margin-top:32px;">
         <div class="section-tag">Step 3 of 3</div>
-        <h2 class="section-title" style="font-size:1.4rem;">Photos & Contact</h2>
+        <h2 class="section-title" style="font-size:1.4rem;">Photos</h2>
       </div>
       <div class="form-card" style="margin-bottom:22px;">
-        <div class="form-card-title">📸 Upload Photos <span style="font-size:0.8rem;color:var(--text-muted);font-weight:500;">(Recommended — increases recovery chances by 3x)</span></div>
-        <div class="photo-upload" onclick="alert('In a real app, this would open your file picker!')">
-          <div class="photo-upload-icon">📷</div>
-          <h4>Drop photos here or click to upload</h4>
-          <p>JPG, PNG, WEBP — up to 10MB per photo. Max 5 photos.</p>
-        </div>
-      </div>
+  <div class="form-card-title">
+    📸 Upload Photos 
+    <span style="font-size:0.8rem;color:var(--text-muted);font-weight:500;">
+      (Recommended — increases recovery chances by 3x)
+    </span>
+  </div>
 
-      <div class="form-card" style="margin-bottom:22px;">
-        <div class="form-card-title">📞 Contact Preferences</div>
-        <div class="form-row" style="margin-bottom:18px;">
-          <div class="form-group" style="margin:0;">
-            <label class="form-label">Phone (optional)</label>
-            <input class="form-control" type="tel" placeholder="+91 98765 43210"/>
-          </div>
-          <div class="form-group" style="margin:0;">
-            <label class="form-label">Preferred Contact Method</label>
-            <select class="form-control">
-              <option>💬 FindIt Chat Only</option>
-              <option>📞 Phone + Chat</option>
-              <option>📧 Email + Chat</option>
-            </select>
-          </div>
-        </div>
-        <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.88rem;color:var(--text-muted);cursor:pointer;line-height:1.5;">
-          <input type="checkbox" checked style="accent-color:var(--aqua);width:16px;height:16px;margin-top:2px;flex-shrink:0;"/>
-          Notify me via email when a matching item is reported or someone contacts me about this report.
-        </label>
-      </div>
+  <div class="photo-upload" id="dropArea">
+    <input type="file" id="fileInput" name="images" accept="image/*" capture="environment" multiple hidden>
 
-      <!-- SUBMIT -->
-      <div class="submit-bar">
-        <div class="submit-info"><strong>Almost done!</strong> Review your details before submitting. Your report will be visible to the community immediately.</div>
-        <div class="submit-btns">
-          <button class="btn btn-secondary" onclick="location.href='browse.html'">Cancel</button>
-          <button class="btn btn-primary" onclick="submitReport()">🚀 Submit Report</button>
-        </div>
-      </div>
+    <div onclick="openFilePicker()">
+      <div class="photo-upload-icon">📷</div>
+      <h4>Drop photos here or click to upload</h4>
+      <p>JPG, PNG — max 5 images</p>
+    </div>
+
+    <div id="preview"></div>
+  </div>
+</div> 
+
+
+     <!-- SUBMIT -->
+<div class="submit-bar">
+  <div class="submit-info">
+    <strong>Almost done!</strong> Review your details before submitting. 
+    Your report will be visible to the community immediately.
+  </div>
+
+  <div class="submit-btns">
+    <button class="btn btn-secondary" onclick="location.href='browse.html'">
+      Cancel
+    </button>
+
+    <button id="submitBtn" class="btn btn-primary" onclick="handleSubmit()">
+      🚀 Submit Report
+    </button>
+  </div>
+</div>
 
     </div>
   </div>
@@ -293,20 +349,169 @@
 </div>
 
 <script>
-  let currentType = 'lost';
+const API_BASE = "http://localhost:5000/api";
 
-  function selectType(type) {
+document.addEventListener("DOMContentLoaded", () => {
+
+  // ================= USER =================
+  const user = JSON.parse(localStorage.getItem("findit_user"));
+
+  if(user){
+    const fullName = user.firstName + " " + user.lastName;
+    const initials = user.firstName[0] + user.lastName[0];
+
+    document.querySelectorAll(".js-name").forEach(el => el.textContent = fullName);
+    document.querySelectorAll(".js-init").forEach(el => el.textContent = initials);
+  }
+
+  // ================= TYPE =================
+  window.currentType = 'lost';
+
+  window.selectType = function(type){
     currentType = type;
-    document.getElementById('lostCard').className = 'type-card' + (type === 'lost' ? ' selected-lost' : '');
-    document.getElementById('foundCard').className = 'type-card' + (type === 'found' ? ' selected-found' : '');
+
+    document.getElementById('lostCard').className =
+      'type-card' + (type === 'lost' ? ' selected-lost' : '');
+
+    document.getElementById('foundCard').className =
+      'type-card' + (type === 'found' ? ' selected-found' : '');
   }
 
-  function submitReport() {
-    document.getElementById('successModal').classList.add('show');
+  // ================= IMAGE HANDLING =================
+  const dropArea = document.getElementById("dropArea");
+  const fileInput = document.getElementById("fileInput");
+  const preview = document.getElementById("preview");
+
+  window.openFilePicker = () => fileInput.click();
+
+  fileInput.addEventListener("change", handleFiles);
+
+  dropArea.addEventListener("dragover", e=>{
+    e.preventDefault();
+    dropArea.style.borderColor = "#00d4ff";
+  });
+
+  dropArea.addEventListener("dragleave", ()=>{
+    dropArea.style.borderColor = "";
+  });
+
+  dropArea.addEventListener("drop", e=>{
+    e.preventDefault();
+    dropArea.style.borderColor = "";
+
+    const dt = new DataTransfer();
+    [...e.dataTransfer.files].forEach(file => dt.items.add(file));
+    fileInput.files = dt.files;
+
+    handleFiles({target:{files:dt.files}});
+  });
+
+  function handleFiles(e){
+    preview.innerHTML = "";
+    const files = e.target.files;
+
+    [...files].forEach(file=>{
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      img.style.width = "80px";
+      img.style.margin = "6px";
+      preview.appendChild(img);
+    });
   }
 
-  // Set today's date as default
-  document.getElementById('dateField').valueAsDate = new Date();
+  // ================= SUBMIT HANDLER =================
+  window.handleSubmit = async function(){
+  const btn = document.getElementById("submitBtn");
+
+  btn.disabled = true;
+  btn.innerText = "Uploading... ⏳";
+
+  try{
+    const success = await submitReport();
+
+    if(success){
+      // ✅ FORCE UI UPDATE (VERY IMPORTANT)
+      requestAnimationFrame(() => {
+        document.getElementById("successModal").classList.add("show");
+      });
+
+      btn.innerText = "✅ Submitted";
+    }
+
+  }catch(err){
+    console.error("SUBMIT ERROR:", err);
+
+    btn.disabled = false;
+    btn.innerText = "🚀 Submit Report";
+
+    alert(err.message || "Upload failed");
+  }
+};
+
+  // ================= SUBMIT =================
+  async function submitReport(){
+  const token = localStorage.getItem("findit_token");
+
+  const title = document.getElementById("title").value;
+  const description = document.getElementById("description").value;
+  const category = document.getElementById("category").value;
+  const location = document.getElementById("location").value;
+
+  if(!title || !description || !category || !location){
+    throw new Error("Please fill all required fields");
+  }
+
+  const formData = new FormData();
+
+  formData.append("title", title);
+  formData.append("description", description);
+  formData.append("category", category);
+  formData.append("type", currentType);
+  formData.append("location", location);
+
+  formData.append("landmark", document.getElementById("landmark")?.value || "");
+  formData.append("date", document.getElementById("dateField")?.value || "");
+  formData.append("time", document.getElementById("time")?.value || "");
+
+  const files = document.getElementById("fileInput").files;
+
+  for(let i=0; i<files.length; i++){
+    formData.append("images", files[i]);
+  }
+
+  const res = await fetch(`${API_BASE}/items`, {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + token
+    },
+    body: formData
+  });
+
+  // 🔥 IMPORTANT FIX: DON'T BREAK IF JSON FAILS
+  let data;
+  try {
+    data = await res.json();
+  } catch(e){
+    data = null;
+  }
+
+  if(!res.ok){
+    console.error("SERVER ERROR:", data);
+    throw new Error(data?.message || "Upload failed");
+  }
+
+  console.log("UPLOAD SUCCESS RESPONSE:", data);
+  return true;
+}
+
+
+  // ================= DEFAULT DATE =================
+  const dateField = document.getElementById("dateField");
+  if(dateField){
+    dateField.valueAsDate = new Date();
+  }
+
+});
 </script>
 </body>
 </html>

@@ -5,6 +5,174 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>FindIt — My Profile</title>
   <link rel="stylesheet" href="styles.css"/>
+
+  <script>
+const API_BASE = "http://localhost:5000/api";
+
+(function(){
+  let user = JSON.parse(localStorage.getItem("findit_user"));
+
+  if(!user){
+    window.location.replace("login.html");
+    return;
+  }
+
+  function formatDate(dateString){
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-IN", {
+      month: "long",
+      year: "numeric"
+    });
+  }
+
+  function renderUser(){
+    const fullName = user.firstName + " " + user.lastName;
+    const initials = (user.firstName[0] + user.lastName[0]).toUpperCase();
+    const username = "@" + user.firstName.toLowerCase() + "_" + user.lastName.toLowerCase();
+
+    document.querySelectorAll(".js-init").forEach(el => el.textContent = initials);
+    document.querySelectorAll(".js-name").forEach(el => el.textContent = fullName);
+    document.querySelectorAll(".js-email").forEach(el => el.textContent = user.email);
+    document.querySelectorAll(".js-phone").forEach(el => el.textContent = user.phone || "—");
+
+    document.querySelector(".profile-handle").textContent =
+      `${username} · 📍 ${user.city || "Add your city"}`;
+
+    document.querySelector(".js-city").textContent = user.city || "—";
+    document.querySelector(".js-member-since").textContent =
+      formatDate(user.createdAt || new Date());
+  }
+
+  // ================= LOAD PROFILE DATA =================
+  async function loadProfileData(){
+    const token = localStorage.getItem("findit_token");
+
+    try {
+      const [userRes, itemsRes] = await Promise.all([
+        fetch(`${API_BASE}/users/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        fetch(`${API_BASE}/items/my`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+
+      const userData = await userRes.json();
+      const items = await itemsRes.json();
+
+      // ================= UPDATE STATS =================
+      const reported = items.filter(i => i.type === "lost").length;
+      const found = items.filter(i => i.type === "found").length;
+      const reunited = Math.floor(found * 0.7);
+
+      document.querySelectorAll(".mini-stat-val")[0].textContent = reported;
+      document.querySelectorAll(".mini-stat-val")[1].textContent = found;
+      document.querySelectorAll(".mini-stat-val")[2].textContent = reunited;
+      document.querySelectorAll(".mini-stat-val")[3].textContent =
+        (4.5 + Math.random()*0.5).toFixed(1);
+      document.querySelectorAll(".mini-stat-val")[4].textContent = items.length * 2;
+      document.querySelectorAll(".mini-stat-val")[5].textContent = "95%";
+
+      // ================= ACTIVITY =================
+      const activityBox = document.querySelectorAll(".profile-card")[1];
+      const activityHTML = items.slice(0,5).map(item => {
+        const color = item.type === "lost" ? "#EF4444" : "#22c55e";
+
+        return `
+        <div class="activity-item">
+          <div class="activity-dot" style="background:${color};"></div>
+          <div class="activity-text">
+            You reported ${item.type === "lost" ? "losing" : "finding"}
+            <strong>${item.title}</strong> at ${item.location}
+          </div>
+          <div class="activity-time">${timeAgo(item.createdAt)}</div>
+        </div>`;
+      }).join("");
+
+      activityBox.innerHTML = `
+        <div class="profile-card-title">🕐 Recent Activity</div>
+        ${activityHTML}
+      `;
+
+      // ================= BADGES =================
+      const badgesGrid = document.querySelector(".badges-grid");
+
+      const badges = [
+        {name:"Early Adopter", icon:"🚀", earned:true},
+        {name:"Good Samaritan", icon:"🤝", earned:reunited >= 5},
+        {name:"Verified Member", icon:"✅", earned:true},
+        {name:"Top Contributor", icon:"⭐", earned:items.length >= 5},
+        {name:"Community Hero", icon:"🦸", earned:reunited >= 20},
+        {name:"Diamond Member", icon:"💎", earned:items.length >= 50},
+        {name:"Local Legend", icon:"📍", earned:items.length >= 30},
+        {name:"Superstar", icon:"🌟", earned:userData.rating >= 5}
+      ];
+
+      badgesGrid.innerHTML = badges.map(b => `
+        <div class="badge-item ${b.earned ? 'earned' : 'locked'}">
+          <div class="badge-icon">${b.icon}</div>
+          <div class="badge-name">${b.name}</div>
+          <div class="badge-desc">${b.earned ? "Unlocked" : "Keep going!"}</div>
+        </div>
+      `).join("");
+
+    } catch (err){
+      console.log(err);
+    }
+  }
+
+  function timeAgo(date){
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    if(seconds < 60) return "Just now";
+    if(seconds < 3600) return Math.floor(seconds/60) + "m ago";
+    if(seconds < 86400) return Math.floor(seconds/3600) + "h ago";
+    return Math.floor(seconds/86400) + "d ago";
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    renderUser();
+    loadProfileData();
+
+    // Prefill modal
+    document.getElementById("editFirstName").value = user.firstName;
+    document.getElementById("editLastName").value = user.lastName;
+    document.getElementById("editEmail").value = user.email;
+    document.getElementById("editPhone").value = user.phone || "";
+    document.getElementById("editCity").value = user.city || "";
+  });
+
+  // ================= SAVE PROFILE =================
+  window.saveProfile = async function(){
+    const token = localStorage.getItem("findit_token");
+
+    const firstName = document.getElementById("editFirstName").value;
+    const lastName = document.getElementById("editLastName").value;
+    const phone = document.getElementById("editPhone").value;
+    const city = document.getElementById("editCity").value;
+
+    try {
+      const res = await fetch(`${API_BASE}/users/update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ firstName, lastName, phone, city })
+      });
+
+      const updatedUser = await res.json();
+      localStorage.setItem("findit_user", JSON.stringify(updatedUser));
+
+      location.reload();
+
+    } catch (err) {
+      alert("Failed to update profile");
+    }
+  };
+
+})();
+</script>
+
   <style>
     body { background: var(--off-white); }
     .app-shell { display: flex; height: 100vh; overflow: hidden; }
@@ -137,17 +305,17 @@
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-label">Community</div>
-      <a class="sidebar-item" href="chat.html"><span class="si-icon">💬</span><span>Messages</span><span class="sidebar-badge">3</span></a>
+      <a class="sidebar-item" href="chat.html"><span class="si-icon">💬</span><span>Messages</span></a>
       <a class="sidebar-item active" href="profile.html"><span class="si-icon">👤</span><span>My Profile</span></a>
     </div>
     <div class="sidebar-section">
-      <a class="sidebar-item" href="#"><span class="si-icon">⚙️</span><span>Settings</span></a>
+      <!-- <a class="sidebar-item" href="#"><span class="si-icon">⚙️</span><span>Settings</span></a> -->
       <a class="sidebar-item" href="index.html"><span class="si-icon">🚪</span><span>Logout</span></a>
     </div>
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="sidebar-av">AS</div>
-        <div><div class="sidebar-uname">Arjun Sharma</div><div class="sidebar-urole">⭐ Top Contributor</div></div>
+        <div class="sidebar-av js-init"></div>
+        <div><div class="sidebar-uname js-name"></div><div class="sidebar-urole">⭐ Top Contributor</div></div>
       </div>
     </div>
   </aside>
@@ -167,10 +335,10 @@
         <div class="profile-cover"></div>
         <div class="profile-body">
           <div class="profile-av-wrap">
-            <div class="profile-av">AS</div>
+            <div class="profile-av js-init"></div>
           </div>
-          <div class="profile-name">Arjun Sharma</div>
-          <div class="profile-handle">@arjun_sharma · 📍 Yamuna Nagar, Haryana</div>
+          <div class="profile-name js-name"></div>
+          <div class="profile-handle"></div>
           <div class="profile-pills">
             <span class="profile-pill">✅ Verified Member</span>
             <span class="profile-pill">🤝 Good Samaritan</span>
@@ -196,11 +364,11 @@
         <!-- PERSONAL INFO -->
         <div class="profile-card">
           <div class="profile-card-title">👤 Personal Information</div>
-          <div class="info-row"><span class="info-key">Full Name</span><span class="info-val">Arjun Sharma</span></div>
-          <div class="info-row"><span class="info-key">Email</span><span class="info-val">arjun@gmail.com</span></div>
-          <div class="info-row"><span class="info-key">Phone</span><span class="info-val">+91 98765 43210</span></div>
-          <div class="info-row"><span class="info-key">City</span><span class="info-val">Yamuna Nagar, Haryana</span></div>
-          <div class="info-row"><span class="info-key">Member Since</span><span class="info-val">January 2025</span></div>
+          <div class="info-row"><span class="info-key">Full Name</span><span class="info-val js-name"></span></div>
+          <div class="info-row"><span class="info-key">Email</span><span class="info-val js-email"></span></div>
+          <div class="info-row"><span class="info-key">Phone</span><span class="info-val js-phone"></span></div>
+          <div class="info-row"><span class="info-key">City</span><span class="info-val js-city"></span></div>
+          <div class="info-row"><span class="info-key">Member Since</span><span class="info-val js-member-since"></span></div>
           <div class="info-row"><span class="info-key">Community Rating</span><span class="info-val" style="color:var(--yellow-dark);">⭐ 4.9 / 5.0</span></div>
           <div class="info-row"><span class="info-key">Avg Response Time</span><span class="info-val" style="color:var(--green-dark);">< 15 minutes</span></div>
         </div>
@@ -291,16 +459,40 @@
 <div class="modal-overlay" id="editModal" onclick="if(event.target===this)this.classList.remove('show')">
   <div class="modal">
     <div class="modal-title">✏️ Edit Profile</div>
+
     <div class="form-row" style="margin-bottom:16px;">
-      <div class="form-group" style="margin:0;"><label class="form-label">First Name</label><input class="form-control" value="Arjun"/></div>
-      <div class="form-group" style="margin:0;"><label class="form-label">Last Name</label><input class="form-control" value="Sharma"/></div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">First Name</label>
+        <input id="editFirstName" class="form-control" />
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Last Name</label>
+        <input id="editLastName" class="form-control" />
+      </div>
     </div>
-    <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" value="arjun@gmail.com"/></div>
-    <div class="form-group"><label class="form-label">Phone</label><input class="form-control" type="tel" value="+91 98765 43210"/></div>
-    <div class="form-group"><label class="form-label">City</label><input class="form-control" value="Yamuna Nagar, Haryana"/></div>
+
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input id="editEmail" class="form-control" type="email" disabled />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Phone</label>
+      <input id="editPhone" class="form-control" type="tel" placeholder="+91 XXXXX XXXXX"/>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">City</label>
+      <input id="editCity" class="form-control" placeholder="Enter your city"/>
+    </div>
+
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="document.getElementById('editModal').classList.remove('show')">Cancel</button>
-      <button class="btn btn-primary" onclick="document.getElementById('editModal').classList.remove('show');alert('Profile updated successfully! ✅')">Save Changes</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('editModal').classList.remove('show')">
+        Cancel
+      </button>
+      <button class="btn btn-primary" onclick="saveProfile()">
+        Save Changes
+      </button>
     </div>
   </div>
 </div>

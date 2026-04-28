@@ -359,20 +359,33 @@ async function doLogin(){
     AUTH.save(d.token,d.user);
     redirectAfterLogin();return;
   }catch(err){
-    /* Backend offline → check demo accounts in localStorage */
-    const accounts=JSON.parse(localStorage.getItem('findit_accounts')||'[]');
-    const match=accounts.find(a=>a.email===email.toLowerCase()&&a.password===pass);
-    if(match){
-      const{password:_p,...safe}=match;
-      AUTH.save(fakeToken(),safe);
-      redirectAfterLogin();return;
-    }
-    const msg=(err.name==='TimeoutError'||err.message.includes('fetch'))
-      ?'Backend server is offline. Use the same email & password you signed up with on this device.'
-      :(err.message||'Invalid email or password.');
-    showAlert('loginAlert',msg);
-    setLoading('loginBtn',false,'Sign In →');
-  }
+  console.log("Login error:", err);
+
+  const msg = (err.name === 'TimeoutError' || err.message.includes('fetch'))
+    ? 'Backend server is not running. Please start backend.'
+    : (err.message || 'Invalid email or password.');
+
+  showAlert('loginAlert', msg);
+  setLoading('loginBtn', false, 'Sign In →');
+}
+  // }catch(err){
+  //   /* Backend offline → check demo accounts in localStorage */
+  //   // const accounts=JSON.parse(localStorage.getItem('findit_accounts')||'[]');
+  //   // const match=accounts.find(a=>a.email===email.toLowerCase()&&a.password===pass);
+  //   // if(match){
+  //   //   const{password:_p,...safe}=match;
+  //   //   AUTH.save(fakeToken(),safe);
+  //   //   redirectAfterLogin();return;
+  //   console.log("Login error:", err);
+
+  //   }
+  //   // const msg=(err.name==='TimeoutError'||err.message.includes('fetch'))
+  //   //   ?'Backend server is offline. Use the same email & password you signed up with on this device.'
+  //   //   :(err.message||'Invalid email or password.');
+     
+  //   showAlert('loginAlert',msg);
+  //   setLoading('loginBtn',false,'Sign In →');
+  // }
 }
 
 /* ════════ SIGNUP ════════ */
@@ -410,33 +423,44 @@ async function doSignup(){
     AUTH.save(d.token,d.user);
     showAlert('signupSuccess','');
     setTimeout(redirectAfterLogin,1200);return;
-  }catch(err){
-    const isNet=err.name==='TimeoutError'||err.message.includes('fetch');
-    if(isNet){
-      /* Save locally for demo mode */
-      const accounts=JSON.parse(localStorage.getItem('findit_accounts')||'[]');
-      if(accounts.find(a=>a.email===email.toLowerCase())){
-        showAlert('signupAlert','An account with this email already exists. Please sign in.');
-        setLoading('signupBtn',false,'Create My Account →');return;
-      }
-      const newUser={
-        _id:'local_'+Date.now(),firstName:first,lastName:last,
-        email:email.toLowerCase(),phone,password:pass,
-        rating:5.0,badges:['Early Adopter'],
-        stats:{reported:0,found:0,reunited:0},
-        createdAt:new Date().toISOString()
-      };
-      accounts.push(newUser);
-      localStorage.setItem('findit_accounts',JSON.stringify(accounts));
-      const{password:_p,...safe}=newUser;
-      AUTH.save(fakeToken(),safe);
-      showAlert('signupSuccess','');
-      setTimeout(redirectAfterLogin,1200);return;
-    }
-    showAlert('signupAlert',err.message||'Registration failed. Please try again.');
-    setLoading('signupBtn',false,'Create My Account →');
-  }
+
+   } catch(err){
+  console.log("Signup error:", err);
+
+  const msg = (err.name === 'TimeoutError' || err.message.includes('fetch'))
+    ? 'Backend server is not running.'
+    : (err.message || 'Registration failed.');
+
+  showAlert('signupAlert', msg);
+  setLoading('signupBtn', false, 'Create My Account →');
 }
+  // }catch(err){
+  //   const isNet=err.name==='TimeoutError'||err.message.includes('fetch');
+  //   if(isNet){
+  //     /* Save locally for demo mode */
+  //     // const accounts=JSON.parse(localStorage.getItem('findit_accounts')||'[]');
+  //     if(accounts.find(a=>a.email===email.toLowerCase())){
+  //       showAlert('signupAlert','An account with this email already exists. Please sign in.');
+  //       setLoading('signupBtn',false,'Create My Account →');return;
+  //     }
+  //     const newUser={
+  //       _id:'local_'+Date.now(),firstName:first,lastName:last,
+  //       email:email.toLowerCase(),phone,password:pass,
+  //       rating:5.0,badges:['Early Adopter'],
+  //       stats:{reported:0,found:0,reunited:0},
+  //       createdAt:new Date().toISOString()
+  //     };
+  //     accounts.push(newUser);
+  //     localStorage.setItem('findit_accounts',JSON.stringify(accounts));
+  //     const{password:_p,...safe}=newUser;
+  //     AUTH.save(fakeToken(),safe);
+  //     showAlert('signupSuccess','');
+  //     setTimeout(redirectAfterLogin,1200);return;
+  //   }
+  //   showAlert('signupAlert',err.message||'Registration failed. Please try again.');
+  //   setLoading('signupBtn',false,'Create My Account →');
+  }
+
 
 /* Enter key support */
 document.addEventListener('keydown',e=>{

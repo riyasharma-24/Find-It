@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Item Details</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+<div class="main-area">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2 class="page-title">Item Details</h2>
+    </div>
+  </div>
+
+  <div class="content" style="padding:20px;">
+
+    <div id="itemContainer"></div>
+
+  </div>
+</div>
+
+<script>
+const API_BASE = "http://localhost:5000/api";
+
+// ================= GET ITEM ID =================
+const params = new URLSearchParams(window.location.search);
+const itemId = params.get("id");
+
+// ================= INIT =================
+if(!itemId){
+  document.getElementById("itemContainer").innerHTML = "<p>Invalid item</p>";
+}else{
+  loadItem();
+}
+
+// ================= FETCH ITEM =================
+async function loadItem(){
+  const container = document.getElementById("itemContainer");
+
+  // loading UI
+  container.innerHTML = "<p>Loading item...</p>";
+
+  try{
+    const res = await fetch(`${API_BASE}/items/${itemId}`);
+
+    if(!res.ok) throw new Error("Item not found");
+
+    const item = await res.json();
+
+    renderItem(item);
+
+  }catch(err){
+    console.log(err);
+    container.innerHTML = "<p>Failed to load item</p>";
+  }
+}
+
+// ================= RENDER =================
+function renderItem(item){
+  const container = document.getElementById("itemContainer");
+
+  const images = item.images?.length
+    ? item.images
+    : ["images/no-image.png"];
+
+  container.innerHTML = `
+  <div class="detail-wrapper">
+
+    <!-- LEFT SIDE -->
+    <div class="detail-left">
+      <div class="detail-image">
+        <img id="mainImage"
+          src="${images[0]}"
+          onerror="this.src='images/no-image.png'"/>
+      </div>
+
+      <div class="detail-thumbs">
+        ${images.map(img => `
+          <img src="${img}"
+            onclick="changeImage('${img}')"
+            onerror="this.src='images/no-image.png'"/>
+        `).join("")}
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="detail-right">
+
+      <!-- ITEM DETAILS CARD -->
+      <div class="detail-card">
+
+        <div style="display:flex;justify-content:space-between;">
+          <span class="badge ${item.type === "lost" ? "badge-lost" : "badge-found"}">
+            ${item.type.toUpperCase()}
+          </span>
+          <span class="detail-time">${formatTime(item.createdAt)}</span>
+        </div>
+
+        <h1 class="detail-title">${item.title}</h1>
+
+        <p class="detail-desc">
+          ${item.description || "No description provided"}
+        </p>
+
+        <div class="detail-meta">
+          <div>📂 ${item.category}</div>
+          <div>📍 ${item.location}</div>
+          ${item.date ? `<div>📅 ${item.date}</div>` : ""}
+          ${item.time ? `<div>⏰ ${item.time}</div>` : ""}
+        </div>
+
+      </div>
+
+      <!-- CONTACT CARD -->
+      <div class="contact-card-modern">
+        <div class="contact-user">
+          <div class="avatar">
+            ${(item.user?.firstName?.[0] || "U")}
+          </div>
+
+          <div>
+            <div class="contact-name">
+              ${item.user?.firstName || ""} ${item.user?.lastName || ""}
+            </div>
+            <div class="contact-sub">Item Owner</div>
+          </div>
+        </div>
+
+        <div class="contact-actions">
+          <button onclick="showPhone('${item.user?.phone}')">📞 Call</button>
+          <button onclick="startChat('${item.user?._id}')">💬 Chat</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  `;
+
+}
+
+// ================= IMAGE SWITCH =================
+function changeImage(src){
+  const main = document.getElementById("mainImage");
+  if(main) main.src = src;
+}
+
+// ================= TIME FORMAT =================
+function formatTime(date){
+  if(!date) return "";
+
+  const d = new Date(date);
+  const now = new Date();
+  const diff = Math.floor((now - d) / (1000 * 60 * 60));
+
+  if(diff < 1) return "Just now";
+  if(diff < 24) return diff + " hrs ago";
+  return Math.floor(diff/24) + " days ago";
+}
+
+// ================= CONTACT =================
+function showPhone(phone){
+  if(!phone){
+    alert("Phone not available");
+    return;
+  }
+
+  const confirmCall = confirm(`Call this number?\n\n${phone}`);
+
+  if(confirmCall){
+    window.location.href = `tel:${phone}`;
+  }
+}
+
+
+
+function startChat(userId){
+  window.location.href = `chat.html?userId=${userId}`;
+}
+</script>
+
+</body>
+</html>

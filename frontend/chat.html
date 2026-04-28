@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Chat - FindIt</title>
+
+<!-- React Icons (via CDN alternative) -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+body{
+  background:linear-gradient(135deg,#eef2ff,#f8fafc);
+}
+
+/* ===== TOP BAR ===== */
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:15px 25px;
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  box-shadow:0 2px 10px rgba(0,0,0,0.04);
+}
+
+.logo{
+  font-weight:800;
+  font-size:22px;
+}
+
+.logo span{
+  color:#14B8A6;
+}
+
+.home-btn{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 16px;
+  border-radius:12px;
+  background:linear-gradient(135deg,#14B8A6,#0ea5e9);
+  color:#fff;
+  cursor:pointer;
+  border:none;
+  transition:0.3s;
+}
+
+.home-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 18px rgba(0,0,0,0.15);
+}
+
+/* ===== LAYOUT ===== */
+.chat-container{
+  display:flex;
+  height:calc(100vh - 70px);
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  width:300px;
+  background:#fff;
+  border-right:1px solid #e5e7eb;
+  overflow-y:auto;
+}
+
+.sidebar h3{
+  padding:16px;
+  font-weight:600;
+  color:#374151;
+}
+
+/* CONTACT */
+.contact{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  cursor:pointer;
+  transition:0.2s;
+  border-bottom:1px solid #f3f4f6;
+}
+
+.contact:hover{
+  background:#f9fafb;
+}
+
+.contact.active{
+  background:#eef2ff;
+}
+
+/* AVATAR */
+.avatar{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#14B8A6,#0ea5e9);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:600;
+}
+
+/* ===== CHAT BOX ===== */
+.chat-box{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+/* HEADER */
+.chat-header{
+  padding:18px;
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  font-weight:600;
+  font-size:16px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+/* ===== MESSAGES ===== */
+.messages{
+  flex:1;
+  padding:20px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+/* MESSAGE BASE */
+.msg{
+  max-width:60%;
+  padding:12px 16px;
+  border-radius:18px;
+  font-size:14px;
+  line-height:1.4;
+  animation:fadeIn 0.2s ease;
+}
+
+/* OWN MESSAGE */
+.msg.own{
+  background:linear-gradient(135deg,#14B8A6,#0ea5e9);
+  color:#fff;
+  margin-left:auto;
+  border-bottom-right-radius:4px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* OTHER MESSAGE */
+.msg.other{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-bottom-left-radius:4px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* ANIMATION */
+@keyframes fadeIn{
+  from{
+    opacity:0;
+    transform:translateY(5px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+/* ===== INPUT ===== */
+.chat-input{
+  display:flex;
+  padding:15px;
+  background:#fff;
+  border-top:1px solid #e5e7eb;
+  position:sticky;
+  bottom:0;
+}
+
+/* INPUT FIELD */
+.chat-input input{
+  flex:1;
+  padding:12px 14px;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  outline:none;
+  font-size:14px;
+  transition:0.2s;
+}
+
+.chat-input input:focus{
+  border-color:#14B8A6;
+  box-shadow:0 0 0 2px rgba(20,184,166,0.15);
+}
+
+/* SEND BUTTON */
+.chat-input button{
+  margin-left:10px;
+  padding:12px 18px;
+  border:none;
+  background:linear-gradient(135deg,#2563EB,#4f46e5);
+  color:#fff;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:500;
+  transition:0.3s;
+}
+
+.chat-input button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 16px rgba(37,99,235,0.3);
+}
+
+/* ===== TYPING ===== */
+#typingIndicator{
+  padding:0 20px;
+  font-size:12px;
+  color:#6b7280;
+  font-style:italic;
+}
+
+.contact div div:first-child {
+  font-size:14px;
+}
+
+.contact div div:last-child {
+  margin-top:2px;
+}
+
+/* CONTACT BLOCK */
+.contact{
+  display:flex;
+  gap:12px;
+  padding:14px 16px;
+  cursor:pointer;
+  transition:0.25s;
+  border-bottom:1px solid #f3f4f6;
+}
+
+.contact:hover{
+  background:#f9fafb;
+}
+
+.contact.active{
+  background:#eef2ff;
+}
+
+/* INFO */
+.contact-info{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+
+/* TOP ROW */
+.contact-top{
+  display:flex;
+  justify-content:space-between;
+  font-size:13px;
+}
+
+.contact-name{
+  font-weight:600;
+}
+
+.contact-time{
+  color:#9ca3af;
+  font-size:11px;
+}
+
+/* BOTTOM ROW */
+.contact-bottom{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+/* LAST MESSAGE */
+.contact-last{
+  font-size:12px;
+  color:#6b7280;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  max-width:160px;
+}
+
+/* UNREAD */
+.unread-badge{
+  background:#14B8A6;
+  color:#fff;
+  font-size:11px;
+  padding:2px 7px;
+  border-radius:20px;
+  font-weight:600;
+}
+
+/* STATUS */
+.contact-status{
+  font-size:11px;
+  color:#9ca3af;
+}
+
+.contact-status.online{
+  color:#10B981;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== TOP ===== -->
+<div class="topbar">
+  <div class="logo">Find<span>It</span></div>
+
+  <button class="home-btn" onclick="location.href='dashboard.html'">
+    <i class="fa-solid fa-house"></i>
+    Dashboard
+  </button>
+</div>
+
+<!-- ===== MAIN ===== -->
+<div class="chat-container">
+
+  <!-- LEFT -->
+  <div class="sidebar">
+    <h3>Conversations</h3>
+    <div id="chatList"></div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="chat-box">
+    <div class="chat-header" id="chatHeader">
+      Select a chat
+    </div>
+
+    <div class="messages" id="messages"></div>
+
+    <div id="typingIndicator" style="padding:0 20px; font-size:12px; color:gray;"></div>
+
+    <div class="chat-input">
+      <input id="msgInput" placeholder="Type a message..." oninput="handleTyping()"/>
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- SOCKET -->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<script>
+const API = "http://localhost:5000/api/chat";
+const socket = io("http://localhost:5000");
+
+const token = localStorage.getItem("findit_token");
+const user = JSON.parse(localStorage.getItem("findit_user"));
+
+if(!token || !user){
+  alert("Please login again");
+  window.location.href = "login.html";
+}
+
+const params = new URLSearchParams(window.location.search);
+const targetUserId = params.get("userId");
+
+// ================= ONLINE USERS =================
+let onlineUsers = [];
+
+socket.emit("addUser", user._id);
+socket.emit("getOnlineUsers");
+
+socket.on("onlineUsers", users => {
+  onlineUsers = users;
+  updateOnlineUI();
+});
+
+let currentConversation = null;
+let typingTimeout;
+
+// ================= LOAD CONVERSATIONS =================
+async function loadConversations(){
+  try{
+    const res = await fetch(API + "/conversation", {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    if(!res.ok) return;
+
+    const data = await res.json();
+
+    const list = document.getElementById("chatList");
+    list.innerHTML = "";
+
+    if(!Array.isArray(data) || data.length === 0){
+      list.innerHTML = "<p style='padding:15px'>No chats yet</p>";
+      return;
+    }
+
+    data.forEach(c=>{
+      const otherUser = c.members.find(m => m._id !== user._id);
+
+      const div = document.createElement("div");
+      div.className = "contact";
+
+      div.innerHTML = `
+        <div class="avatar">
+          ${otherUser.firstName[0]}${otherUser.lastName[0]}
+        </div>
+
+        <div class="contact-info">
+          <div class="contact-top">
+            <span class="contact-name">
+              ${otherUser.firstName} ${otherUser.lastName}
+            </span>
+
+            <span class="contact-time">
+              ${c.lastMessage?.createdAt 
+                ? new Date(c.lastMessage.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                : ""}
+            </span>
+          </div>
+
+          <div class="contact-bottom">
+            <span class="contact-last">
+              ${c.lastMessage?.text || "Start conversation"}
+            </span>
+
+            ${
+              c.unreadCount > 0
+              ? `<span class="unread-badge">${c.unreadCount}</span>`
+              : ""
+            }
+          </div>
+
+          <div class="contact-status ${onlineUsers.includes(otherUser._id) ? 'online' : ''}">
+            ${onlineUsers.includes(otherUser._id) ? "● Online" : "Offline"}
+          </div>
+        </div>
+      `;
+
+      div.onclick = (e) => openChat(c._id, otherUser._id, e);
+      list.appendChild(div);
+    });
+
+  }catch(err){
+    console.error(err);
+  }
+}
+
+// ================= OPEN CHAT =================
+async function openChat(id, otherId, event){
+  currentConversation = id;
+
+  document.querySelectorAll(".contact").forEach(el => el.classList.remove("active"));
+  event?.currentTarget?.classList.add("active");
+
+  document.getElementById("chatHeader").innerText =
+    "Chat with User " + otherId.slice(-4);
+
+  socket.emit("joinConversation", id);
+
+  // ✅ REMOVE BADGE INSTANTLY
+  const badge = event?.currentTarget?.querySelector(".unread-badge");
+  if (badge) badge.remove();
+
+  try{
+    const res = await fetch(API + "/message/" + id, {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    const msgs = await res.json();
+
+    if(!Array.isArray(msgs)) return;
+
+    renderMessages(msgs);
+
+    // 🔥 IMPORTANT FIX → refresh conversations AFTER read update
+    loadConversations();
+
+  }catch(err){
+    console.error(err);
+  }
+}
+
+// ================= SCROLL =================
+function scrollToBottom(){
+  const box = document.getElementById("messages");
+  box.scrollTop = box.scrollHeight;
+}
+
+// ================= TYPING =================
+function handleTyping(){
+  if(!currentConversation) return;
+
+  socket.emit("typing", {
+    conversationId: currentConversation,
+    sender: user._id
+  });
+
+  clearTimeout(typingTimeout);
+
+  typingTimeout = setTimeout(() => {
+    socket.emit("stopTyping", {
+      conversationId: currentConversation,
+      sender: user._id
+    });
+  }, 1000);
+}
+
+socket.on("typing", data => {
+  if(data.conversationId !== currentConversation) return;
+  document.getElementById("typingIndicator").innerText = "Typing...";
+});
+
+socket.on("stopTyping", data => {
+  if(data.conversationId !== currentConversation) return;
+  document.getElementById("typingIndicator").innerText = "";
+});
+
+// ================= CREATE CONVERSATION =================
+async function startConversationIfNeeded(){
+  if(!targetUserId) return;
+
+  try{
+    const res = await fetch(API + "/conversation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ receiverId: targetUserId })
+    });
+
+    const convo = await res.json();
+
+    if(!convo?._id) return;
+
+    openChat(convo._id, targetUserId, null);
+
+  }catch(err){
+    console.error(err);
+  }
+}
+
+// ================= RENDER =================
+function renderMessages(msgs){
+  const box = document.getElementById("messages");
+  box.innerHTML = "";
+
+  msgs.forEach(m=>{
+    const div = document.createElement("div");
+    div.className = "msg " + (m.sender === user._id ? "own" : "other");
+    div.innerText = m.text;
+    box.appendChild(div);
+  });
+
+  scrollToBottom();
+}
+
+// ================= SEND =================
+async function sendMessage(){
+  const input = document.getElementById("msgInput");
+  const text = input.value.trim();
+
+  if(!text || !currentConversation){
+    alert("Conversation not ready");
+    return;
+  }
+
+  const box = document.getElementById("messages");
+
+  const div = document.createElement("div");
+  div.className = "msg own";
+  div.innerText = text;
+  box.appendChild(div);
+  scrollToBottom();
+
+  try{
+    await fetch(API + "/message", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        Authorization:"Bearer " + token
+      },
+      body: JSON.stringify({
+        conversationId: currentConversation,
+        text
+      })
+    });
+
+    socket.emit("sendMessage", {
+      conversationId: currentConversation,
+      text,
+      sender: user._id,
+      receiverId: targetUserId
+    });
+
+    loadConversations();
+
+  }catch(err){
+    console.error(err);
+  }
+
+  input.value = "";
+}
+
+// ================= SOCKET =================
+socket.on("receiveMessage", msg=>{
+  if(msg.sender === user._id) return;
+
+  // 🔥 always refresh sidebar for unread sync
+  loadConversations();
+
+  if(msg.conversationId !== currentConversation) return;
+
+  const box = document.getElementById("messages");
+
+  const div = document.createElement("div");
+  div.className = "msg other";
+  div.innerText = msg.text;
+
+  box.appendChild(div);
+  scrollToBottom();
+});
+
+// ================= UPDATE ONLINE =================
+function updateOnlineUI(){
+  loadConversations();
+}
+
+// ================= INIT =================
+loadConversations();
+startConversationIfNeeded();
+</script>
+
+</body>
+</html>

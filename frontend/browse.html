@@ -88,7 +88,8 @@
       transition: all 0.28s; cursor: pointer;
     }
     .item-card:hover { border-color: var(--aqua); transform: translateY(-5px); box-shadow: var(--shadow-md); }
-    .item-thumb { height: 160px; display: flex; align-items: center; justify-content: center; font-size: 3.8rem; position: relative; }
+    .item-thumb { height: 160px; display: flex; align-items: center; justify-content: center; font-size: 3.8rem; position: relative; overflow: hidden; }
+    .item-thumb img { width: 100%; height: 100%; object-fit: cover;}
     .thumb-lost { background: linear-gradient(135deg, #FEF2F2, #FECACA); }
     .thumb-found { background: linear-gradient(135deg, #F0FDF4, #BBF7D0); }
     .thumb-aqua { background: linear-gradient(135deg, var(--aqua-pale), #b3f0f2); }
@@ -124,17 +125,20 @@
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-label">Community</div>
-      <a class="sidebar-item" href="chat.html"><span class="si-icon">💬</span><span>Messages</span><span class="sidebar-badge">3</span></a>
+      <a class="sidebar-item" href="chat.html"><span class="si-icon">💬</span><span>Messages</span></a>
       <a class="sidebar-item" href="profile.html"><span class="si-icon">👤</span><span>My Profile</span></a>
     </div>
     <div class="sidebar-section">
-      <a class="sidebar-item" href="#"><span class="si-icon">⚙️</span><span>Settings</span></a>
+      <!-- <a class="sidebar-item" href="#"><span class="si-icon">⚙️</span><span>Settings</span></a> -->
       <a class="sidebar-item" href="index.html"><span class="si-icon">🚪</span><span>Logout</span></a>
     </div>
     <div class="sidebar-footer">
       <div class="sidebar-user" onclick="location.href='profile.html'">
-        <div class="sidebar-av">AS</div>
-        <div><div class="sidebar-uname">Arjun Sharma</div><div class="sidebar-urole">⭐ Top Contributor</div></div>
+        <div class="sidebar-av js-init"></div>
+<div>
+  <div class="sidebar-uname js-name"></div>
+  <div class="sidebar-urole">⭐ Top Contributor</div>
+</div>
       </div>
     </div>
   </aside>
@@ -143,9 +147,16 @@
     <div class="topbar">
       <div class="topbar-left"><h2>Browse Items</h2><p>Explore all lost & found reports</p></div>
       <div class="topbar-right">
-        <div class="search-bar"><span>🔍</span><input type="text" placeholder="Search by item, location…"/></div>
-        <div class="icon-btn">🔔<span class="notif-dot">3</span></div>
-        <div class="sidebar-av" style="width:40px;height:40px;cursor:pointer;" onclick="location.href='profile.html'">AS</div>
+        <div class="search-bar"><span>🔍</span><input type="text" placeholder="Search by item"/></div>
+        <div class="icon-btn">
+  🔔<span class="notif-dot js-notif">0</span>
+</div>
+
+<div 
+  class="sidebar-av js-init" 
+  style="width:40px;height:40px;cursor:pointer;" 
+  onclick="location.href='profile.html'">
+</div>
       </div>
     </div>
 
@@ -175,118 +186,9 @@
         </select>
       </div>
 
-      <!-- RESULTS HEADER -->
-      <div class="results-header">
-        <h3>Showing 24 items near Yamuna Nagar</h3>
-        <span class="results-count">Page 1 of 8 · 192 total reports</span>
-      </div>
 
       <!-- GRID -->
-      <div class="items-grid">
-
-        <div class="item-card" onclick="location.href='chat.html'">
-          <div class="item-thumb thumb-lost">📱</div>
-          <div class="item-body">
-            <div class="item-header"><span class="badge badge-lost">Lost</span><span class="item-time">2 hrs ago</span></div>
-            <div class="item-name">iPhone 15 Pro — Space Black</div>
-            <div class="item-desc">Lost at metro station, has a cracked screen protector. Contains important data.</div>
-            <div class="item-footer">
-              <div class="item-location">📍 Central Metro</div>
-              <button class="contact-btn" onclick="event.stopPropagation();location.href='chat.html'">💬 Contact</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="item-card" onclick="location.href='chat.html'">
-          <div class="item-thumb thumb-found">🔑</div>
-          <div class="item-body">
-            <div class="item-header"><span class="badge badge-found">Found</span><span class="item-time">5 hrs ago</span></div>
-            <div class="item-name">Car Keys — Maruti Swift</div>
-            <div class="item-desc">Found near the market with a small keychain. Silver colored with remote.</div>
-            <div class="item-footer">
-              <div class="item-location">📍 Sector 14 Market</div>
-              <button class="contact-btn" onclick="event.stopPropagation();location.href='chat.html'">💬 Contact</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="item-card">
-          <div class="item-thumb thumb-lost">🎒</div>
-          <div class="item-body">
-            <div class="item-header"><span class="badge badge-lost">Lost</span><span class="item-time">Yesterday</span></div>
-            <div class="item-name">Navy Blue Jansport Backpack</div>
-            <div class="item-desc">Contains laptop, notebooks, and charger. Very important to recover ASAP.</div>
-            <div class="item-footer">
-              <div class="item-location">📍 City University</div>
-              <button class="contact-btn" onclick="location.href='chat.html'">💬 Contact</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="item-card">
-          <div class="item-thumb thumb-found">🐕</div>
-          <div class="item-body">
-            <div class="item-header"><span class="badge badge-found">Found</span><span class="item-time">5 hrs ago</span></div>
-            <div class="item-name">Golden Labrador — No Collar</div>
-            <div class="item-desc">Friendly dog, found near the park. Well-fed, appears to be someone's pet.</div>
-            <div class="item-footer">
-              <div class="item-location">📍 Green Valley Park</div>
-              <button class="contact-btn" onclick="location.href='chat.html'">💬 Contact</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="item-card">
-          <div class="item-thumb thumb-lost">👜</div>
-          <div class="item-body">
-            <div class="item-header"><span class="badge badge-lost">Lost</span><span class="item-time">Yesterday</span></div>
-            <div class="item-name">Black Leather Handbag — Zara</div>
-            <div class="item-desc">Black handbag with gold clasp, pink keychain inside. Contains wallet and docs.</div>
-            <div class="item-footer">
-              <div class="item-location">📍 City Mall, Gate 3</div>
-              <button class="contact-btn" onclick="location.href='chat.html'">💬 Contact</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="item-card">
-          <div class="item-thumb thumb-aqua">👓</div>
-          <div class="item-body">
-            <div class="item-header"><span class="badge badge-found">Found</span><span class="item-time">Today</span></div>
-            <div class="item-name">Ray-Ban Sunglasses — Tortoise</div>
-            <div class="item-desc">Found on a cafe table near MG Road. Classic tortoiseshell frame, in case.</div>
-            <div class="item-footer">
-              <div class="item-location">📍 Café Mocha</div>
-              <button class="contact-btn" onclick="location.href='chat.html'">💬 Contact</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="item-card">
-          <div class="item-thumb thumb-lost" style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);">📔</div>
-          <div class="item-body">
-            <div class="item-header"><span class="badge badge-lost">Lost</span><span class="item-time">2 days ago</span></div>
-            <div class="item-name">Student ID + Aadhar Card</div>
-            <div class="item-desc">Lost important documents including student ID and Aadhar. Very urgent!</div>
-            <div class="item-footer">
-              <div class="item-location">📍 Bus Stand No. 5</div>
-              <button class="contact-btn" onclick="location.href='chat.html'">💬 Contact</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="item-card">
-          <div class="item-thumb thumb-found" style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);">💍</div>
-          <div class="item-body">
-            <div class="item-header"><span class="badge badge-found">Found</span><span class="item-time">3 days ago</span></div>
-            <div class="item-name">Gold Ring with Diamond Setting</div>
-            <div class="item-desc">Found near swimming pool. Small gold ring with a solitaire diamond. Stored safely.</div>
-            <div class="item-footer">
-              <div class="item-location">📍 Sports Complex</div>
-              <button class="contact-btn" onclick="location.href='chat.html'">💬 Contact</button>
-            </div>
-          </div>
-        </div>
+      <div class="items-grid" id="itemsGrid"></div>
 
       </div>
 
@@ -306,18 +208,211 @@
 </div>
 
 <script>
-  document.querySelectorAll('.cat-tab').forEach(btn => {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
+const API_BASE = "http://localhost:5000/api";
+const grid = document.getElementById("itemsGrid");
+
+// ================= STATE =================
+let currentTypeFilter = "all";
+let currentCategory = "all";
+let searchQuery = "";
+let sortValue = "newest";
+let currentPage = 1;
+
+// ================= USER =================
+const user = JSON.parse(localStorage.getItem("findit_user"));
+
+if(user){
+  const full = user.firstName + " " + user.lastName;
+  const init = (user.firstName?.[0] || "") + (user.lastName?.[0] || "");
+
+  document.querySelectorAll(".js-name").forEach(el => el.textContent = full);
+  document.querySelectorAll(".js-init").forEach(el => el.textContent = init.toUpperCase());
+}
+
+// ================= FETCH ITEMS =================
+async function fetchItems(){
+  try{
+    const params = new URLSearchParams({
+      type: currentTypeFilter,
+      category: currentCategory,
+      search: searchQuery,
+      sort: sortValue,
+      page: currentPage,
+      limit: 8
     });
+
+    const res = await fetch(`${API_BASE}/items?${params}`);
+    const data = await res.json();
+
+    let items = data.items || [];
+    let totalPages = data.pages || 1;
+
+    renderItems(items);
+    renderPagination(totalPages);
+    updateNotifications(items);
+
+  }catch(err){
+    console.error("FETCH ERROR:", err);
+    grid.innerHTML = "<p>Failed to load items</p>";
+  }
+}
+
+// ================= RENDER ITEMS =================
+function renderItems(items){
+  grid.innerHTML = "";
+
+  if(!items.length){
+    grid.innerHTML = "<p>No items found</p>";
+    return;
+  }
+
+  items.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "item-card";
+
+    card.onclick = () => {
+      window.location.href = `item.html?id=${item._id}`;
+    };
+
+    const image = item.images?.[0] || "images/no-image.png";
+
+    card.innerHTML = `
+      <div class="item-thumb ${item.type === "lost" ? "thumb-lost" : "thumb-found"}">
+        <img src="${image}" onerror="this.src='images/no-image.png'" />
+      </div>
+
+      <div class="item-body">
+        <div class="item-header">
+          <span class="badge ${item.type === "lost" ? "badge-lost" : "badge-found"}">
+            ${item.type.toUpperCase()}
+          </span>
+          <span class="item-time">${formatTime(item.createdAt)}</span>
+        </div>
+
+        <div class="item-name">${item.title}</div>
+        <div class="item-desc">${item.description}</div>
+
+        <div class="item-footer">
+          <div class="item-location">📍 ${item.location}</div>
+
+          <button class="contact-btn"
+            onclick="event.stopPropagation(); goToItem('${item._id}')">
+            💬 Contact
+          </button>
+        </div>
+      </div>
+    `;
+
+    grid.appendChild(card);
   });
-  document.querySelectorAll('.filter-tab').forEach(btn => {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.filter-tab').forEach(b => b.className = 'filter-tab');
-      this.classList.add(this.textContent.includes('Lost') ? 'active-lost' : this.textContent.includes('Found') ? 'active-found' : 'active-all');
-    });
+}
+
+// ================= REDIRECT =================
+function goToItem(id){
+  window.location.href = `item.html?id=${id}`;
+}
+
+// ================= PAGINATION =================
+function renderPagination(totalPages){
+  const container = document.querySelector(".pagination");
+  container.innerHTML = "";
+
+  if(totalPages <= 1) return;
+
+  for(let i=1; i<=totalPages; i++){
+    const btn = document.createElement("div");
+    btn.className = "page-btn" + (i === currentPage ? " active" : "");
+    btn.innerText = i;
+
+    btn.onclick = () => {
+      currentPage = i;
+      fetchItems();
+    };
+
+    container.appendChild(btn);
+  }
+}
+
+// ================= NOTIFICATIONS =================
+function updateNotifications(items){
+  const notif = document.querySelectorAll(".js-notif");
+  const count = items.length > 9 ? "9+" : items.length;
+  notif.forEach(el => el.textContent = count);
+}
+
+// ================= TIME =================
+function formatTime(date){
+  const d = new Date(date);
+  const diff = Math.floor((Date.now() - d) / (1000*60*60));
+
+  if(diff < 1) return "Just now";
+  if(diff < 24) return diff + " hrs ago";
+  return Math.floor(diff/24) + " days ago";
+}
+
+// ================= TYPE FILTER =================
+document.querySelectorAll('.filter-tab').forEach(btn => {
+  btn.addEventListener('click', function(){
+
+    document.querySelectorAll('.filter-tab').forEach(b => b.className = 'filter-tab');
+
+    if(this.textContent.includes("Lost")){
+      currentTypeFilter = "lost";
+      this.classList.add("active-lost");
+    }
+    else if(this.textContent.includes("Found")){
+      currentTypeFilter = "found";
+      this.classList.add("active-found");
+    }
+    else{
+      currentTypeFilter = "all";
+      this.classList.add("active-all");
+    }
+
+    currentPage = 1;
+    fetchItems();
   });
+});
+
+// ================= CATEGORY =================
+document.querySelectorAll('.cat-tab').forEach(btn => {
+  btn.addEventListener('click', function(){
+
+    document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+
+    const text = this.textContent;
+
+    if(text.includes("Electronics")) currentCategory = "Electronics";
+    else if(text.includes("Bags")) currentCategory = "Bags";
+    else if(text.includes("Pets")) currentCategory = "Pets";
+    else if(text.includes("Keys")) currentCategory = "Keys";
+    else if(text.includes("Docs")) currentCategory = "Docs";
+    else if(text.includes("Jewelry")) currentCategory = "Jewelry";
+    else currentCategory = "all";
+
+    currentPage = 1;
+    fetchItems();
+  });
+});
+
+// ================= SEARCH =================
+document.querySelector(".search-bar input")
+?.addEventListener("input", (e)=>{
+  searchQuery = e.target.value;
+  currentPage = 1;
+  fetchItems();
+});
+
+// ================= SORT =================
+document.querySelector(".sort-select")
+?.addEventListener("change", (e)=>{
+  sortValue = e.target.value.includes("Oldest") ? "oldest" : "newest";
+  fetchItems();
+});
+
+// ================= INIT =================
+fetchItems();
 </script>
 </body>
 </html>

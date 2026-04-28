@@ -3,32 +3,253 @@
 <head>
 <script>
 (function(){
-  var token=localStorage.getItem("findit_token");
-  var user=null;
-  try{user=JSON.parse(localStorage.getItem("findit_user"));}catch(e){}
-  if(!token||!user){
-    sessionStorage.setItem("findit_redirect",window.location.href);
+
+  // ================= AUTH =================
+  let token = localStorage.getItem("findit_token");
+  let user = null;
+
+  try {
+    user = JSON.parse(localStorage.getItem("findit_user"));
+  } catch(e){}
+
+  if(!token || !user){
+    sessionStorage.setItem("findit_redirect", window.location.href);
     window.location.replace("login.html");
     return;
   }
-  window.AUTH={
-    getToken:function(){return localStorage.getItem("findit_token");},
-    getUser:function(){try{return JSON.parse(localStorage.getItem("findit_user"));}catch(e){return null;}},
-    isLoggedIn:function(){return !!localStorage.getItem("findit_token");},
-    logout:function(){localStorage.removeItem("findit_token");localStorage.removeItem("findit_user");window.location.replace("login.html");}
+
+  window.AUTH = {
+    getToken: () => localStorage.getItem("findit_token"),
+    getUser: () => JSON.parse(localStorage.getItem("findit_user")),
+    logout: () => {
+      localStorage.clear();
+      window.location.replace("login.html");
+    }
   };
-  document.addEventListener("DOMContentLoaded",function(){
-    if(!user)return;
-    var full=user.firstName+" "+user.lastName;
-    var init=(user.firstName[0]+user.lastName[0]).toUpperCase();
-    document.querySelectorAll(".js-name").forEach(function(e){e.textContent=full;});
-    document.querySelectorAll(".js-first").forEach(function(e){e.textContent=user.firstName;});
-    document.querySelectorAll(".js-init").forEach(function(e){e.textContent=init;});
-    document.querySelectorAll(".js-email").forEach(function(e){e.textContent=user.email||"";});
-    document.querySelectorAll(".js-phone").forEach(function(e){e.textContent=user.phone||"—";});
+
+  const searchInput = document.getElementById("dashboardSearch");
+
+if(searchInput){
+  let debounceTimer;
+
+  searchInput.addEventListener("input", (e)=>{
+    clearTimeout(debounceTimer);
+
+    debounceTimer = setTimeout(()=>{
+      const value = e.target.value.trim();
+      searchDashboard(value);
+    }, 400);
   });
+}
+
+  // ================= INIT =================
+  document.addEventListener("DOMContentLoaded", () => {
+    const user = AUTH.getUser();
+
+    // Greeting
+    const hour = new Date().getHours();
+    let greet = "Good morning";
+    if(hour >= 12 && hour < 18) greet = "Good afternoon";
+    if(hour >= 18) greet = "Good evening";
+
+    const greetEl = document.querySelector(".greeting-text p");
+    if(greetEl){
+      greetEl.textContent = `${greet}, 👋 Welcome back!`;
+    }
+
+    // Date
+    const dateEl = document.querySelector(".js-date-location");
+    if(dateEl){
+      dateEl.textContent = `${formatDate()} · ${user?.city || "Add your city"}`;
+    }
+
+    // User info
+    if(user){
+      const full = `${user.firstName} ${user.lastName}`;
+      const init = (user.firstName?.[0] + user.lastName?.[0]).toUpperCase();
+
+      document.querySelectorAll(".js-name").forEach(e => e.textContent = full);
+      document.querySelectorAll(".js-first").forEach(e => e.textContent = user.firstName);
+      document.querySelectorAll(".js-init").forEach(e => e.textContent = init);
+    }
+
+    loadDashboard();
+  });
+
+  // ================= LOAD =================
+  async function loadDashboard(){
+    const recentEl = document.getElementById("recentReports");
+
+    try{
+      // Skeleton loader
+      recentEl.innerHTML = `
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      `;
+
+      const res = await fetch("http://localhost:5000/api/items");
+      const data = await res.json();
+
+      const items = Array.isArray(data) ? data : data.items;
+
+      if(!Array.isArray(items)){
+        throw new Error("Invalid data format");
+      }
+
+      renderStats(items);
+      renderRecent(items);
+      renderMap(items);
+      updateMapHeader();
+
+    }catch(err){
+      console.error("Dashboard error:", err);
+      recentEl.innerHTML = `<p style="padding:10px;">⚠️ Failed to load data</p>`;
+    }
+  }
+
+  async function searchDashboard(query){
+  const recentEl = document.getElementById("recentReports");
+
+  try{
+    recentEl.innerHTML = `<div class="skeleton"></div>`;
+
+    const res = await fetch(`http://localhost:5000/api/items?search=${query}`);
+    const data = await res.json();
+
+    const items = Array.isArray(data) ? data : data.items;
+
+    renderRecent(items);
+
+  }catch(err){
+    console.error("Search error:", err);
+    recentEl.innerHTML = `<p style="padding:10px;">Search failed</p>`;
+  }
+}
+
+  // ================= STATS =================
+  function renderStats(items){
+    const user = AUTH.getUser();
+
+    const myItems = items.filter(i => i.user?._id === user._id);
+
+    const now = new Date();
+    const last7 = new Date(now.getTime() - 7*24*60*60*1000);
+
+    const lost = myItems.filter(i => i.type === "lost").length;
+    const found = myItems.filter(i => i.type === "found").length;
+
+    const lost7 = myItems.filter(i => i.type==="lost" && new Date(i.createdAt)>=last7).length;
+    const found7 = myItems.filter(i => i.type==="found" && new Date(i.createdAt)>=last7).length;
+
+    const reunited = Math.floor(found * 0.6);
+
+    const cards = document.querySelectorAll(".stat-card");
+
+    cards[0].querySelector(".stat-val").textContent = lost;
+    cards[1].querySelector(".stat-val").textContent = found;
+    cards[2].querySelector(".stat-val").textContent = reunited;
+    cards[3].querySelector(".stat-val").textContent = (4.6 + Math.min(found/10,0.4)).toFixed(1);
+
+    cards[0].querySelector(".stat-delta").textContent = `↓ ${lost7} this week`;
+    cards[1].querySelector(".stat-delta").textContent = `↑ ${found7} this week`;
+  }
+
+  // ================= RECENT =================
+  function renderRecent(items){
+    const container = document.getElementById("recentReports");
+
+    if(items.length === 0){
+      container.innerHTML = `<p style="padding:10px;">No reports found</p>`;
+      return;
+    }
+
+    const recent = items.slice(0,5);
+
+    container.innerHTML = recent.map(item => `
+      <div class="report-item" onclick="location.href='item.html?id=${item._id}'">
+        
+        <div class="ri-emoji">${getEmoji(item.category)}</div>
+
+        <div class="ri-info">
+          <div class="ri-name">${item.title}</div>
+          <div class="ri-meta">📍 ${item.location}</div>
+
+          <div class="ri-actions">
+            <button onclick="event.stopPropagation(); location.href='item.html?id=${item._id}'">View</button>
+          </div>
+        </div>
+
+        <div class="ri-right">
+          <span class="badge ${item.type==='lost'?'badge-lost':'badge-found'}">
+            ${item.type}
+          </span>
+          <div class="ri-time">${formatTime(item.createdAt)}</div>
+        </div>
+
+      </div>
+    `).join("");
+  }
+
+  // ================= MAP =================
+  function renderMap(items){
+    const mapArea = document.querySelector(".map-pins-area");
+
+    mapArea.innerHTML = `<div class="map-label-box">🗺️ Click pins</div>`;
+
+    const zones = ["20%","50%","80%"];
+
+    items.slice(0,6).forEach((item,i)=>{
+      const pin = document.createElement("div");
+      pin.className = "map-pin";
+
+      pin.style.left = zones[i % 3];
+      pin.style.top = (20 + i*10) + "%";
+
+      pin.innerHTML = `<div class="pin ${item.type==="lost"?"red":"green"}"></div>`;
+
+      pin.onclick = () => location.href = `item.html?id=${item._id}`;
+
+      mapArea.appendChild(pin);
+    });
+  }
+
+  function updateMapHeader(){
+    const user = AUTH.getUser();
+    document.querySelector(".map-header h3").textContent =
+      `📍 Items Map — ${user.city || "Your Area"}`;
+  }
+
+  // ================= HELPERS =================
+  function formatDate(){
+    return new Date().toLocaleDateString("en-IN", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+  }
+
+  function formatTime(date){
+    const d = new Date(date);
+    const diff = Math.floor((Date.now()-d)/(1000*60*60));
+
+    if(diff < 1) return "Just now";
+    if(diff < 24) return diff + " hrs ago";
+    return Math.floor(diff/24) + " days ago";
+  }
+
+  function getEmoji(category){
+    const map = {
+      Electronics:"📱", Keys:"🔑", Bags:"👜",
+      Pets:"🐕", Jewelry:"💍", Docs:"📄"
+    };
+    return map[category] || "📦";
+  }
+
 })();
 </script>
+
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>FindIt — Dashboard</title>
@@ -279,6 +500,61 @@
     .qa-label { font-weight: 800; font-size: 1rem; }
     .qa-sub { font-size: 0.78rem; opacity: 0.8; margin-top: 2px; }
 
+    /* Skeleton Loader */
+.skeleton {
+  height:60px;
+  background:linear-gradient(90deg,#eee,#f5f5f5,#eee);
+  animation: shimmer 1.5s infinite;
+  border-radius:10px;
+  margin:10px;
+}
+@keyframes shimmer {
+  0%{background-position:-200px}
+  100%{background-position:200px}
+}
+
+/* Hover Cards */
+.report-item {
+  transition: all .25s ease;
+}
+.report-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+/* Actions */
+.ri-actions {
+  margin-top:6px;
+  display:flex;
+  gap:6px;
+}
+.ri-actions button {
+  border:none;
+  padding:4px 10px;
+  border-radius:8px;
+  font-size:0.7rem;
+  cursor:pointer;
+  background:#eef2ff;
+  color:#1d4ed8;
+  transition:all .2s;
+}
+.ri-actions button:hover {
+  background:#1d4ed8;
+  color:white;
+  transform:scale(1.05);
+}
+
+/* Stat hover */
+.stat-card:hover {
+  transform: translateY(-6px) scale(1.02);
+}
+
+@media(max-width:768px){
+  .ri-actions{
+    display:none;
+  }
+}
+
     @media(max-width:1100px) { .stat-grid { grid-template-columns: 1fr 1fr; } .two-col { grid-template-columns: 1fr; } }
     @media(max-width:768px) { .sidebar { width: 64px; } .sidebar-logo span, .sidebar-logo .logo-dot { display:none; } .sidebar-item span:not(.si-icon) { display:none; } .sidebar-badge { display:none; } .sidebar-uname,.sidebar-urole { display:none; } .content { padding: 20px; } }
   </style>
@@ -308,7 +584,7 @@
       <div class="sidebar-section-label">Community</div>
       <a class="sidebar-item" href="chat.html">
         <span class="si-icon">💬</span><span>Messages</span>
-        <span class="sidebar-badge">3</span>
+        
       </a>
       <a class="sidebar-item" href="profile.html">
         <span class="si-icon">👤</span><span>My Profile</span>
@@ -317,9 +593,9 @@
 
     <div class="sidebar-section">
       <div class="sidebar-section-label">Account</div>
-      <a class="sidebar-item" href="#">
+      <!-- <a class="sidebar-item" href="#">
         <span class="si-icon">⚙️</span><span>Settings</span>
-      </a>
+      </a> -->
       <a class="sidebar-item" href="#" onclick="AUTH.logout();return false;">
         <span class="si-icon">🚪</span><span>Logout</span>
       </a>
@@ -327,9 +603,9 @@
 
     <div class="sidebar-footer">
       <div class="sidebar-user" onclick="location.href='profile.html'">
-        <div class="sidebar-av">AS</div>
+        <div class="sidebar-av js-init"></div>
         <div>
-          <div class="sidebar-uname">Arjun Sharma</div>
+          <div class="sidebar-uname js-name"></div>
           <div class="sidebar-urole">⭐ Top Contributor</div>
         </div>
       </div>
@@ -343,17 +619,15 @@
     <div class="topbar">
       <div class="topbar-left">
         <h2>Dashboard</h2>
-        <p>Friday, 17 April 2026 · Yamuna Nagar</p>
+        <p class="js-date-location"></p>
       </div>
       <div class="topbar-right">
-        <div class="search-bar">
+        <!-- <div class="search-bar">
           <span>🔍</span>
-          <input type="text" placeholder="Search items, locations…"/>
-        </div>
-        <div class="icon-btn" onclick="alert('No new notifications at the moment!')">
-          🔔<span class="notif-dot">3</span>
-        </div>
-        <div class="sidebar-av" style="width:40px;height:40px;cursor:pointer;" onclick="location.href='profile.html'">AS</div>
+          <input id="dashboardSearch" type="text" placeholder="Search items"/>
+        </div> -->
+        
+        <div class="sidebar-av js-init" style="width:40px;height:40px;cursor:pointer;" onclick="location.href='profile.html'"></div>
       </div>
     </div>
 
@@ -364,7 +638,7 @@
       <div class="greeting-bar">
         <div class="greeting-text">
           <p>Good morning, 👋 Welcome back!</p>
-          <h2>Hello, <span>Arjun!</span> Let's make a difference today.</h2>
+          <h2>Hello, <span class="js-first"></span>! Let's make a difference today.</h2>
         </div>
         <div class="greeting-emoji">🔍</div>
       </div>
@@ -374,7 +648,7 @@
         <div class="stat-card">
           <div class="stat-card-top">
             <div class="stat-icon si-red">❌</div>
-            <span class="stat-delta delta-down">↑ 1 this week</span>
+            <span class="stat-delta delta-down"></span>
           </div>
           <div class="stat-val">3</div>
           <div class="stat-label">Items I Reported Lost</div>
@@ -432,80 +706,20 @@
             <h3>🕐 Recent Reports Near You</h3>
             <button class="view-all-btn" onclick="location.href='browse.html'">View all →</button>
           </div>
-          <div class="report-list">
-            <div class="report-item" onclick="location.href='chat.html'">
-              <div class="ri-emoji" style="background:#FEE2E2;">📱</div>
-              <div class="ri-info">
-                <div class="ri-name">iPhone 15 Pro — Space Black</div>
-                <div class="ri-meta">📍 Central Metro Station · Electronics</div>
-              </div>
-              <div class="ri-right">
-                <span class="badge badge-lost">Lost</span>
-                <div class="ri-time">2 hrs ago</div>
-              </div>
+          <div class="report-list" id="recentReports"></div>
             </div>
-            <div class="report-item" onclick="location.href='chat.html'">
-              <div class="ri-emoji" style="background:var(--green-light);">🔑</div>
-              <div class="ri-info">
-                <div class="ri-name">Car Keys — Maruti Swift</div>
-                <div class="ri-meta">📍 Sector 14 Market · Keys</div>
-              </div>
-              <div class="ri-right">
-                <span class="badge badge-found">Found</span>
-                <div class="ri-time">5 hrs ago</div>
-              </div>
-            </div>
-            <div class="report-item">
-              <div class="ri-emoji" style="background:#FEE2E2;">👜</div>
-              <div class="ri-info">
-                <div class="ri-name">Black Leather Handbag — Zara</div>
-                <div class="ri-meta">📍 City Mall, Gate 3 · Bags</div>
-              </div>
-              <div class="ri-right">
-                <span class="badge badge-lost">Lost</span>
-                <div class="ri-time">Yesterday</div>
-              </div>
-            </div>
-            <div class="report-item">
-              <div class="ri-emoji" style="background:var(--green-light);">🐕</div>
-              <div class="ri-info">
-                <div class="ri-name">Golden Labrador — No Collar</div>
-                <div class="ri-meta">📍 Green Valley Park · Pets</div>
-              </div>
-              <div class="ri-right">
-                <span class="badge badge-found">Found</span>
-                <div class="ri-time">2 days ago</div>
-              </div>
-            </div>
-            <div class="report-item">
-              <div class="ri-emoji" style="background:#FEE2E2;">🎒</div>
-              <div class="ri-info">
-                <div class="ri-name">Navy Blue Jansport Backpack</div>
-                <div class="ri-meta">📍 City University · Bags</div>
-              </div>
-              <div class="ri-right">
-                <span class="badge badge-lost">Lost</span>
-                <div class="ri-time">3 days ago</div>
-              </div>
-            </div>
-          </div>
-        </div>
+   
 
         <!-- MAP -->
         <div>
           <div class="map-card">
             <div class="map-header">
-              <h3>📍 Items Map — Yamuna Nagar</h3>
-              <span class="badge badge-pending">5 Nearby</span>
+              <h3>📍 Items Map — </h3>
+              <span class="badge badge-pending"></span>
             </div>
             <div class="map-grid"></div>
             <div class="map-pins-area">
-              <div class="map-pin" style="top:20%;left:28%;"><div class="pin red"></div></div>
-              <div class="map-pin" style="top:45%;left:60%;"><div class="pin green"></div></div>
-              <div class="map-pin" style="top:65%;left:35%;"><div class="pin red"></div></div>
-              <div class="map-pin" style="top:30%;left:72%;"><div class="pin aqua"></div></div>
-              <div class="map-pin" style="top:55%;left:15%;"><div class="pin green"></div></div>
-              <div class="map-label-box">🗺️ Tap a pin to view item details</div>
+              
             </div>
           </div>
         </div>

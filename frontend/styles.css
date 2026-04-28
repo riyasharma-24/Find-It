@@ -240,3 +240,178 @@ img { max-width: 100%; }
   .navbar { padding: 0 20px; }
   .nav-links { display: none; }
 }
+
+
+
+/* ===== ITEM DETAIL PAGE ===== */
+
+.detail-wrapper {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 30px;
+  align-items: start;
+}
+
+.detail-left {
+  background: white;
+  padding: 16px;
+  border-radius: 16px;
+  border: 2px solid var(--border);
+}
+
+.detail-image {
+  width: 100%;
+  height: 360px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-thumbs {
+  display: flex;
+  gap: 10px;
+}
+
+.detail-thumbs img {
+  width: 70px;
+  height: 70px;
+  border-radius: 10px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: 0.2s;
+}
+
+.detail-thumbs img:hover {
+  border-color: var(--aqua);
+}
+
+.detail-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detail-card {
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.detail-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.detail-desc {
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-weight: 600;
+}
+
+.contact-card-modern {
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.contact-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.contact-actions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+/* CALL BUTTON */
+.contact-actions button:first-child {
+  background: #22c55e;
+  color: white;
+}
+
+.contact-actions button:first-child:hover {
+  background: #16a34a;
+  transform: scale(1.05);
+}
+
+/* CHAT BUTTON */
+.contact-actions button:last-child {
+  background: #2563eb;
+  color: white;
+}
+
+.contact-actions button:last-child:hover {
+  background: #1d4ed8;
+  transform: scale(1.05);
+}
+
+/* CLICK EFFECT */
+.contact-actions button:active {
+  transform: scale(0.95);
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, #2563eb, hsl(216, 71%, 45%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.5px;
+  position: relative;
+  display: inline-block;
+}
+
+
+
+
+.detail-left,
+.detail-card,
+.contact-card-modern {
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.detail-left:hover,
+.detail-card:hover,
+.contact-card-modern:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.detail-wrapper {
+  animation: fadeUp 0.4s ease;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
