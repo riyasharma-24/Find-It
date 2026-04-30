@@ -359,16 +359,23 @@ body{
 </div>
 
 <!-- SOCKET -->
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js">
+  
+</script>
 
 <script>
-
-  const BASE_URl = window.location.hostname === "localhost"
+// ================= BASE URL =================
+const BASE_URL =
+  window.location.hostname === "localhost"
     ? "http://localhost:5000"
     : "https://find-it-backend-60pe.onrender.com";
-const API = BASE_URl + "/api/chat";
-const socket = io(BASE_URl);
 
+const API = BASE_URL + "/api/chat";
+const socket = io(BASE_URL);
+
+// ================= AUTH =================
 const token = localStorage.getItem("findit_token");
 const user = JSON.parse(localStorage.getItem("findit_user"));
 
@@ -377,12 +384,17 @@ if(!token || !user){
   window.location.href = "login.html";
 }
 
+// ================= PARAMS =================
 const params = new URLSearchParams(window.location.search);
 const targetUserId = params.get("userId");
 
-// ================= ONLINE USERS =================
+// ================= GLOBAL STATE =================
 let onlineUsers = [];
+let currentConversation = null;
+let currentReceiverId = null;
+let typingTimeout;
 
+// ================= SOCKET INIT =================
 socket.emit("addUser", user._id);
 socket.emit("getOnlineUsers");
 
@@ -391,17 +403,12 @@ socket.on("onlineUsers", users => {
   updateOnlineUI();
 });
 
-let currentConversation = null;
-let typingTimeout;
-
 // ================= LOAD CONVERSATIONS =================
 async function loadConversations(){
   try{
     const res = await fetch(API + "/conversation", {
       headers: { Authorization: "Bearer " + token }
     });
-
-    if(!res.ok) return;
 
     const data = await res.json();
 
@@ -467,6 +474,7 @@ async function loadConversations(){
 // ================= OPEN CHAT =================
 async function openChat(id, otherId, event){
   currentConversation = id;
+  currentReceiverId = otherId;
 
   document.querySelectorAll(".contact").forEach(el => el.classList.remove("active"));
   event?.currentTarget?.classList.add("active");
@@ -476,7 +484,7 @@ async function openChat(id, otherId, event){
 
   socket.emit("joinConversation", id);
 
-  // ✅ REMOVE BADGE INSTANTLY
+  // remove unread badge instantly
   const badge = event?.currentTarget?.querySelector(".unread-badge");
   if (badge) badge.remove();
 
@@ -490,69 +498,7 @@ async function openChat(id, otherId, event){
     if(!Array.isArray(msgs)) return;
 
     renderMessages(msgs);
-
-    // 🔥 IMPORTANT FIX → refresh conversations AFTER read update
     loadConversations();
-
-  }catch(err){
-    console.error(err);
-  }
-}
-
-// ================= SCROLL =================
-function scrollToBottom(){
-  const box = document.getElementById("messages");
-  box.scrollTop = box.scrollHeight;
-}
-
-// ================= TYPING =================
-function handleTyping(){
-  if(!currentConversation) return;
-
-  socket.emit("typing", {
-    conversationId: currentConversation,
-    sender: user._id
-  });
-
-  clearTimeout(typingTimeout);
-
-  typingTimeout = setTimeout(() => {
-    socket.emit("stopTyping", {
-      conversationId: currentConversation,
-      sender: user._id
-    });
-  }, 1000);
-}
-
-socket.on("typing", data => {
-  if(data.conversationId !== currentConversation) return;
-  document.getElementById("typingIndicator").innerText = "Typing...";
-});
-
-socket.on("stopTyping", data => {
-  if(data.conversationId !== currentConversation) return;
-  document.getElementById("typingIndicator").innerText = "";
-});
-
-// ================= CREATE CONVERSATION =================
-async function startConversationIfNeeded(){
-  if(!targetUserId) return;
-
-  try{
-    const res = await fetch(API + "/conversation", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-      body: JSON.stringify({ receiverId: targetUserId })
-    });
-
-    const convo = await res.json();
-
-    if(!convo?._id) return;
-
-    openChat(convo._id, targetUserId, null);
 
   }catch(err){
     console.error(err);
@@ -609,7 +555,7 @@ async function sendMessage(){
       conversationId: currentConversation,
       text,
       sender: user._id,
-      receiverId: targetUserId
+      receiverId: currentReceiverId
     });
 
     loadConversations();
@@ -621,11 +567,10 @@ async function sendMessage(){
   input.value = "";
 }
 
-// ================= SOCKET =================
+// ================= RECEIVE =================
 socket.on("receiveMessage", msg=>{
   if(msg.sender === user._id) return;
 
-  // 🔥 always refresh sidebar for unread sync
   loadConversations();
 
   if(msg.conversationId !== currentConversation) return;
@@ -640,12 +585,70 @@ socket.on("receiveMessage", msg=>{
   scrollToBottom();
 });
 
-// ================= UPDATE ONLINE =================
+// ================= TYPING =================
+function handleTyping(){
+  if(!currentConversation) return;
+
+  socket.emit("typing", {
+    conversationId: currentConversation,
+    sender: user._id
+  });
+
+  clearTimeout(typingTimeout);
+
+  typingTimeout = setTimeout(() => {
+    socket.emit("stopTyping", {
+      conversationId: currentConversation,
+      sender: user._id
+    });
+  }, 1000);
+}
+
+socket.on("typing", data => {
+  if(data.conversationId !== currentConversation) return;
+  document.getElementById("typingIndicator").innerText = "Typing...";
+});
+
+socket.on("stopTyping", data => {
+  if(data.conversationId !== currentConversation) return;
+  document.getElementById("typingIndicator").innerText = "";
+});
+
+// ================= SCROLL =================
+function scrollToBottom(){
+  const box = document.getElementById("messages");
+  box.scrollTop = box.scrollHeight;
+}
+
+// ================= INIT =================
 function updateOnlineUI(){
   loadConversations();
 }
 
-// ================= INIT =================
+async function startConversationIfNeeded(){
+  if(!targetUserId) return;
+
+  try{
+    const res = await fetch(API + "/conversation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ receiverId: targetUserId })
+    });
+
+    const convo = await res.json();
+
+    if(!convo?._id) return;
+
+    openChat(convo._id, targetUserId, null);
+
+  }catch(err){
+    console.error(err);
+  }
+}
+
 loadConversations();
 startConversationIfNeeded();
 </script>
