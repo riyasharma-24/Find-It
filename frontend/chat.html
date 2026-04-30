@@ -362,8 +362,12 @@ body{
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
 <script>
-const API = "https://find-it-backend-60pe.onrender.com/api";
-const socket = io("https://find-it-backend-60pe.onrender.com");
+
+  const BASE_URl = window.location.hostname === "localhost"
+    ? "http://localhost:5000"
+    : "https://find-it-backend-60pe.onrender.com";
+const API = BASE_URl + "/api/chat";
+const socket = io(BASE_URl);
 
 const token = localStorage.getItem("findit_token");
 const user = JSON.parse(localStorage.getItem("findit_user"));
