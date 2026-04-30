@@ -26,16 +26,11 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (mobile apps / postman)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      return callback(new Error("CORS not allowed"));
-    }
-  },
+  origin: [
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "https://find-it-puce.vercel.app"
+  ],
   credentials: true
 }));
 
