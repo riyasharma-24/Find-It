@@ -87,8 +87,9 @@ if(searchInput){
         <div class="skeleton"></div>
         <div class="skeleton"></div>
       `;
-
-      const res = await fetch("http://localhost:5000/api/items");
+       
+      const API_BASE = "https://find-it-backend-60pe.onrender.com/api";
+      const res = await fetch(`${API_BASE}/items`);
       const data = await res.json();
 
       const items = Array.isArray(data) ? data : data.items;
@@ -114,7 +115,7 @@ if(searchInput){
   try{
     recentEl.innerHTML = `<div class="skeleton"></div>`;
 
-    const res = await fetch(`http://localhost:5000/api/items?search=${query}`);
+    const res = await fetch(`${API_BASE}/items?search=${query}`);
     const data = await res.json();
 
     const items = Array.isArray(data) ? data : data.items;
