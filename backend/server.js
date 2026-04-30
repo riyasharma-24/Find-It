@@ -19,22 +19,21 @@ const server = http.createServer(app);
 
 // ================= CORS CONFIG =================
 const allowedOrigins = [
-  "http://127.0.0.1:5500",
   "http://localhost:5500",
+  "http://127.0.0.1:5500",
   "http://localhost:3000",
-  "https://find-it-puce.vercel.app/"
+  "https://find-it-puce.vercel.app" // ✅ your frontend
 ];
 
 app.use(cors({
-  origin: [
-    "http://localhost:5500",
-    "http://127.0.0.1:5500",
-    "https://find-it-puce.vercel.app"
-  ],
+  origin: allowedOrigins,
   credentials: true
 }));
 
+
+// ================= MIDDLEWARE =================
 app.use(express.json());
+app.use("/uploads", express.static("uploads"));
 
 
 // ================= SOCKET.IO =================
@@ -46,7 +45,7 @@ const io = new Server(server, {
 });
 
 
-// 🔥 Store online users
+// 🔥 Online users
 const onlineUsers = new Map();
 
 io.on("connection", (socket) => {
@@ -93,10 +92,6 @@ io.on("connection", (socket) => {
 });
 
 
-// ================= STATIC =================
-app.use("/uploads", express.static("uploads"));
-
-
 // ================= ROUTES =================
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
@@ -105,7 +100,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 
-// ================= HEALTH =================
+// ================= HEALTH CHECK =================
 app.get("/", (req, res) => {
   res.send("🚀 Backend Running");
 });
@@ -120,7 +115,7 @@ app.use((err, req, res, next) => {
 });
 
 
-// ================= DB =================
+// ================= DB CONNECT =================
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
